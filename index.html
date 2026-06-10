@@ -690,6 +690,262 @@
       .hero-stats .hs { padding: 0 16px; }
       .hero-stats .hs-n { font-size: 30px; }
     }
+    .hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(420px, .95fr);
+  align-items: center;
+  gap: 56px;
+  width: 100%;
+}
+
+.hero-copy {
+  max-width: 690px;
+}
+
+.hero-visual {
+  position: relative;
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeUp .8s 1s forwards;
+}
+
+.ai-card {
+  position: relative;
+  width: min(100%, 500px);
+  border-radius: 26px;
+  padding: 14px;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(135deg, rgba(0,200,255,.55), rgba(124,58,237,.55)) border-box;
+  border: 1px solid transparent;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.45),
+    0 0 80px rgba(0,200,255,.08);
+  overflow: hidden;
+}
+
+.ai-card::before {
+  content: '';
+  position: absolute;
+  inset: -120px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,200,255,.18), transparent 28%),
+    radial-gradient(circle at 80% 15%, rgba(124,58,237,.18), transparent 26%),
+    radial-gradient(circle at 55% 85%, rgba(0,229,255,.12), transparent 30%);
+  animation: aiGlowMove 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes aiGlowMove {
+  0%,100% { transform: translate(0,0) rotate(0deg); }
+  50% { transform: translate(20px,-16px) rotate(8deg); }
+}
+
+.ai-card-top {
+  position: relative;
+  z-index: 2;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 6px 12px;
+}
+
+.ai-card-top span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.16);
+}
+
+.ai-card-top span:nth-child(1) { background: #ff5f57; }
+.ai-card-top span:nth-child(2) { background: #ffbd2e; }
+.ai-card-top span:nth-child(3) { background: #28c840; }
+
+.ai-hero-svg {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+}
+
+.hv-orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0,200,255,.14);
+  pointer-events: none;
+}
+
+.hv-orbit-1 {
+  width: 520px;
+  height: 520px;
+  animation: orbitSpin 22s linear infinite;
+}
+
+.hv-orbit-2 {
+  width: 410px;
+  height: 410px;
+  border-color: rgba(124,58,237,.16);
+  animation: orbitSpin 18s linear infinite reverse;
+}
+
+@keyframes orbitSpin {
+  to { transform: rotate(360deg); }
+}
+
+.float-card {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 150px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(8,13,26,.88);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 18px 40px rgba(0,0,0,.28);
+  animation: floatCard 5s ease-in-out infinite;
+}
+
+.float-card strong {
+  display: block;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.float-card small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.2;
+  margin-top: 3px;
+}
+
+.fc-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(0,200,255,.10);
+  border: 1px solid rgba(0,200,255,.18);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fc-1 {
+  top: 74px;
+  left: -22px;
+  animation-delay: 0s;
+}
+
+.fc-2 {
+  top: 180px;
+  right: -22px;
+  animation-delay: 1.2s;
+}
+
+.fc-3 {
+  bottom: 86px;
+  left: 18px;
+  animation-delay: 2.2s;
+}
+
+@keyframes floatCard {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Hide old floating tech pills if they still exist */
+.tf {
+  display: none;
+}
+
+/* Better hero spacing */
+#hero {
+  min-height: 100vh;
+  padding-top: 40px;
+}
+
+.hero-content {
+  width: 100%;
+  padding: 130px 0 90px;
+}
+
+.hero-name {
+  max-width: 760px;
+}
+
+.hero-sub {
+  max-width: 640px;
+}
+
+/* responsive */
+@media(max-width:1100px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+    gap: 46px;
+  }
+
+  .hero-copy {
+    max-width: 760px;
+  }
+
+  .hero-visual {
+    min-height: auto;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  .ai-card {
+    width: min(100%, 520px);
+  }
+}
+
+@media(max-width:640px) {
+  .hero-content {
+    padding: 110px 0 70px;
+  }
+
+  .hero-layout {
+    gap: 34px;
+  }
+
+  .hero-name {
+    font-size: 40px;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+  }
+
+  .hero-visual {
+    display: none;
+  }
+
+  .hero-stats {
+    flex-wrap: wrap;
+    row-gap: 18px;
+  }
+
+  .hs-sep {
+    display: none;
+  }
+
+  .hero-stats .hs {
+    padding: 0 18px 0 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -774,68 +1030,230 @@
 <main>
 
 <!-- ═══ HERO ═══ -->
+<!-- ═══ HERO ═══ -->
 <section id="hero">
   <canvas id="hero-canvas" aria-hidden="true"></canvas>
   <div class="hero-grid-lines" aria-hidden="true"></div>
 
   <div class="hero-content container">
+    <div class="hero-layout">
 
-    <div class="hero-badge" id="heroBadge">
-      <span class="hb-pulse"></span>
-      <span>Available for Projects — 2026</span>
+      <!-- LEFT CONTENT -->
+      <div class="hero-copy">
+
+        <div class="hero-badge" id="heroBadge">
+          <span class="hb-pulse"></span>
+          <span>Available for Projects — 2026</span>
+        </div>
+
+        <h1 class="hero-name" id="heroName">
+          <div class="hn-line">
+            <span class="word w1">Building</span>&nbsp;<span class="word w2 grd">Smart</span>
+          </div>
+          <div class="hn-line">
+            <span class="word w3 outlined">Digital</span>&nbsp;<span class="word w4">Products</span>
+          </div>
+          <div class="hn-line">
+            <span class="amp">&amp;</span><span class="word w5 grd">Scalable</span>&nbsp;<span class="word w6 grd">Systems</span>
+          </div>
+        </h1>
+
+        <p class="hero-sub" id="heroSub">
+          I design and build <em>full stack web apps, SaaS platforms, dashboards, APIs, and business automation systems</em>
+          that are clean, scalable, and ready for real-world users.
+        </p>
+
+        <div class="hero-terminal" id="heroTerm">
+          <span class="ht-prompt">yasir@dev:~$</span>
+          <span id="typed-text"></span><span class="typed-cur">▌</span>
+        </div>
+
+        <div class="hero-btns" id="heroBtns">
+          <a href="#projects" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <polyline points="16 18 22 12 16 6"/>
+              <polyline points="8 6 2 12 8 18"/>
+            </svg>
+            View My Work
+            <div class="bp-glow"></div>
+          </a>
+          <a href="#contact" class="btn-glass">Start a Project →</a>
+        </div>
+
+        <div class="hero-stats" id="heroStats">
+          <div class="hs"><span class="hs-n" data-t="4">0</span><sup>+</sup><small>Years</small></div>
+          <div class="hs-sep"></div>
+          <div class="hs"><span class="hs-n" data-t="20">0</span><sup>+</sup><small>Projects</small></div>
+          <div class="hs-sep"></div>
+          <div class="hs"><span class="hs-n" data-t="100">0</span><sup>%</sup><small>Committed</small></div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT AI SVG VISUAL -->
+      <div class="hero-visual" aria-hidden="true">
+
+        <div class="hv-orbit hv-orbit-1"></div>
+        <div class="hv-orbit hv-orbit-2"></div>
+
+        <div class="ai-card">
+          <div class="ai-card-top">
+            <span></span><span></span><span></span>
+          </div>
+
+          <svg class="ai-hero-svg" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="aiBg" cx="50%" cy="35%" r="70%">
+                <stop offset="0%" stop-color="#102a4a"/>
+                <stop offset="100%" stop-color="#050814"/>
+              </radialGradient>
+
+              <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00c8ff"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+
+              <linearGradient id="screenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00c8ff" stop-opacity="0.8"/>
+                <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.8"/>
+              </linearGradient>
+
+              <filter id="svgGlow">
+                <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <!-- Background -->
+            <rect width="520" height="520" rx="26" fill="url(#aiBg)"/>
+
+            <!-- Grid -->
+            <g opacity="0.18">
+              <path d="M40 100H480M40 180H480M40 260H480M40 340H480M40 420H480" stroke="#00c8ff" stroke-width="1"/>
+              <path d="M100 40V480M180 40V480M260 40V480M340 40V480M420 40V480" stroke="#00c8ff" stroke-width="1"/>
+            </g>
+
+            <!-- Big glow circles -->
+            <circle cx="260" cy="250" r="170" fill="#00c8ff" opacity="0.06"/>
+            <circle cx="360" cy="160" r="90" fill="#7c3aed" opacity="0.10"/>
+            <circle cx="140" cy="360" r="90" fill="#00c8ff" opacity="0.08"/>
+
+            <!-- AI brain / network -->
+            <g filter="url(#svgGlow)">
+              <circle cx="260" cy="145" r="54" fill="rgba(0,200,255,0.08)" stroke="url(#aiGrad)" stroke-width="2"/>
+              <circle cx="238" cy="132" r="7" fill="#00c8ff"/>
+              <circle cx="282" cy="132" r="7" fill="#7c3aed"/>
+              <circle cx="224" cy="162" r="7" fill="#7c3aed"/>
+              <circle cx="260" cy="172" r="7" fill="#00c8ff"/>
+              <circle cx="296" cy="162" r="7" fill="#00c8ff"/>
+              <path d="M238 132L282 132M238 132L224 162M282 132L296 162M224 162L260 172M260 172L296 162M238 132L260 172M282 132L260 172" stroke="rgba(232,234,246,0.45)" stroke-width="1.4"/>
+            </g>
+
+            <!-- Developer body -->
+            <path d="M140 470C150 365 190 320 260 320C330 320 370 365 380 470H140Z" fill="#0d1526" stroke="rgba(0,200,255,0.2)" stroke-width="2"/>
+            <path d="M220 322L260 360L300 322" stroke="rgba(0,200,255,0.35)" stroke-width="2"/>
+
+            <!-- Neck -->
+            <rect x="236" y="278" width="48" height="52" rx="18" fill="#b47b55"/>
+
+            <!-- Face -->
+            <ellipse cx="260" cy="230" rx="72" ry="82" fill="#c58b63"/>
+            <path d="M190 220C188 160 220 125 260 125C300 125 332 160 330 220C316 170 292 154 260 154C228 154 204 170 190 220Z" fill="#1a0a00"/>
+
+            <!-- Ears -->
+            <ellipse cx="188" cy="234" rx="11" ry="18" fill="#a8704d"/>
+            <ellipse cx="332" cy="234" rx="11" ry="18" fill="#a8704d"/>
+
+            <!-- Eyes -->
+            <ellipse cx="235" cy="226" rx="13" ry="9" fill="#fff"/>
+            <ellipse cx="285" cy="226" rx="13" ry="9" fill="#fff"/>
+            <circle cx="237" cy="226" r="5" fill="#1a0f09"/>
+            <circle cx="283" cy="226" r="5" fill="#1a0f09"/>
+
+            <!-- Glasses -->
+            <rect x="214" y="215" width="42" height="25" rx="8" fill="none" stroke="rgba(0,200,255,0.45)" stroke-width="2"/>
+            <rect x="264" y="215" width="42" height="25" rx="8" fill="none" stroke="rgba(0,200,255,0.45)" stroke-width="2"/>
+            <line x1="256" y1="228" x2="264" y2="228" stroke="rgba(0,200,255,0.45)" stroke-width="2"/>
+
+            <!-- Nose / mouth -->
+            <path d="M258 233C254 247 255 253 264 253" stroke="#8a5a38" stroke-width="2" stroke-linecap="round"/>
+            <path d="M238 275C248 284 274 284 284 275" stroke="#8a5a38" stroke-width="3" stroke-linecap="round"/>
+
+            <!-- Laptop -->
+            <rect x="130" y="360" width="260" height="82" rx="10" fill="#07101d" stroke="rgba(0,200,255,0.3)" stroke-width="2"/>
+            <rect x="146" y="376" width="228" height="48" rx="5" fill="#050814"/>
+            <rect x="158" y="386" width="70" height="5" rx="2" fill="#c792ea"/>
+            <rect x="236" y="386" width="48" height="5" rx="2" fill="#c3e88d"/>
+            <rect x="292" y="386" width="38" height="5" rx="2" fill="#00c8ff"/>
+            <rect x="158" y="400" width="110" height="5" rx="2" fill="#00c8ff" opacity="0.75"/>
+            <rect x="276" y="400" width="58" height="5" rx="2" fill="#7c3aed" opacity="0.75"/>
+            <rect x="158" y="414" width="150" height="5" rx="2" fill="#82aaff" opacity="0.7"/>
+            <rect x="110" y="442" width="300" height="12" rx="5" fill="#111d32" stroke="rgba(0,200,255,0.18)"/>
+
+            <!-- Floating UI panels -->
+            <g>
+              <rect x="56" y="116" width="112" height="58" rx="12" fill="rgba(8,13,26,0.92)" stroke="rgba(0,200,255,0.22)"/>
+              <text x="76" y="140" font-family="Space Mono" font-size="10" fill="#00c8ff">API STATUS</text>
+              <rect x="76" y="152" width="70" height="5" rx="2.5" fill="rgba(0,200,255,0.45)"/>
+            </g>
+
+            <g>
+              <rect x="356" y="116" width="110" height="58" rx="12" fill="rgba(8,13,26,0.92)" stroke="rgba(124,58,237,0.25)"/>
+              <text x="376" y="140" font-family="Space Mono" font-size="10" fill="#a78bfa">AI ASSIST</text>
+              <rect x="376" y="152" width="64" height="5" rx="2.5" fill="rgba(124,58,237,0.5)"/>
+            </g>
+
+            <g>
+              <rect x="378" y="286" width="92" height="52" rx="12" fill="rgba(8,13,26,0.92)" stroke="rgba(0,200,255,0.22)"/>
+              <text x="398" y="309" font-family="Space Mono" font-size="9" fill="#00c8ff">DEPLOY</text>
+              <circle cx="406" cy="324" r="5" fill="#22c55e"/>
+              <text x="418" y="328" font-family="Space Mono" font-size="8" fill="rgba(232,234,246,0.7)">LIVE</text>
+            </g>
+
+            <g>
+              <rect x="48" y="286" width="102" height="52" rx="12" fill="rgba(8,13,26,0.92)" stroke="rgba(0,200,255,0.22)"/>
+              <text x="68" y="309" font-family="Space Mono" font-size="9" fill="#00c8ff">SYSTEM</text>
+              <rect x="68" y="321" width="54" height="5" rx="2.5" fill="rgba(0,200,255,0.45)"/>
+            </g>
+
+            <!-- Connecting lines -->
+            <path d="M168 145C195 145 205 145 213 145" stroke="rgba(0,200,255,0.35)" stroke-width="1.5" stroke-dasharray="5 5"/>
+            <path d="M356 145C326 145 315 145 307 145" stroke="rgba(124,58,237,0.35)" stroke-width="1.5" stroke-dasharray="5 5"/>
+            <path d="M150 310C178 310 190 336 210 360" stroke="rgba(0,200,255,0.28)" stroke-width="1.5" stroke-dasharray="5 5"/>
+            <path d="M378 312C348 320 330 342 310 360" stroke="rgba(124,58,237,0.28)" stroke-width="1.5" stroke-dasharray="5 5"/>
+          </svg>
+        </div>
+
+        <div class="float-card fc-1">
+          <span class="fc-icon">⚡</span>
+          <div>
+            <strong>Fast Delivery</strong>
+            <small>Clean builds</small>
+          </div>
+        </div>
+
+        <div class="float-card fc-2">
+          <span class="fc-icon">AI</span>
+          <div>
+            <strong>AI Ready</strong>
+            <small>Modern systems</small>
+          </div>
+        </div>
+
+        <div class="float-card fc-3">
+          <span class="fc-icon">API</span>
+          <div>
+            <strong>Scalable APIs</strong>
+            <small>Secure backend</small>
+          </div>
+        </div>
+
+      </div>
+
     </div>
-
-    <h1 class="hero-name" id="heroName">
-      <div class="hn-line"><span class="word w1">Full</span>&nbsp;<span class="word w2">Stack</span></div>
-      <div class="hn-line"><span class="word w3 outlined">Developer</span></div>
-      <div class="hn-line"><span class="amp">&amp;</span><span class="word w4 grd">Product</span>&nbsp;<span class="word w5 grd">Builder</span></div>
-    </h1>
-
-    <p class="hero-sub" id="heroSub">
-      I build <em>scalable web products</em>, design software systems,
-      and turn ideas into real-world digital solutions.
-    </p>
-
-    <div class="hero-terminal" id="heroTerm">
-      <span class="ht-prompt">yasir@dev:~$</span>
-      <span id="typed-text"></span><span class="typed-cur">▌</span>
-    </div>
-
-    <div class="hero-btns" id="heroBtns">
-      <a href="#projects" class="btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        View My Work
-        <div class="bp-glow"></div>
-      </a>
-      <a href="#contact" class="btn-glass">Let's Talk →</a>
-    </div>
-
-    <div class="hero-stats" id="heroStats">
-      <div class="hs"><span class="hs-n" data-t="4">0</span><sup>+</sup><small>Years</small></div>
-      <div class="hs-sep"></div>
-      <div class="hs"><span class="hs-n" data-t="20">0</span><sup>+</sup><small>Projects</small></div>
-      <div class="hs-sep"></div>
-      <div class="hs"><span class="hs-n" data-t="100">0</span><sup>%</sup><small>Committed</small></div>
-    </div>
-
-  </div>
-
-  <!-- floating tech pills with SVG icons -->
-  <div class="tf tf1" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    Node.js
-  </div>
-  <div class="tf tf2" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="2"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(0)"/></svg>
-    React.js
-  </div>
-  <div class="tf tf3" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v4c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 10v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4"/></svg>
-    SQL
-  </div>
-  <div class="tf tf4" aria-hidden="true">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    REST API
   </div>
 
   <div class="scroll-mouse" aria-hidden="true"><div class="sm-wheel"></div></div>
@@ -1863,9 +2281,10 @@ window.addEventListener('load', ()=>{
 
 // ── TYPED TEXT ──
 const phrases = [
-  'npm run build:production',
-  'git push origin main',
-  'node server.js --port 3000',
+  'building scalable SaaS products...',
+  'designing clean REST APIs...',
+  'shipping dashboards that convert...',
+  'automating business workflows...',
   'SELECT * FROM projects WHERE shipped = true',
 ];
 let pi=0, ci=0, del=false;
