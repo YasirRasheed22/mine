@@ -9,14 +9,692 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Space+Mono:wght@400;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050814;
+      --bg2: #080d1a;
+      --surface: #0d1526;
+      --border: rgba(0,200,255,0.12);
+      --cyan: #00c8ff;
+      --violet: #7c3aed;
+      --cyan2: #00e5ff;
+      --text: #e8eaf6;
+      --muted: #6b7a9a;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'Manrope', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    ::selection { background: rgba(0,200,255,.25); color: #fff; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 2px; }
+
+    /* ── NOISE OVERLAY ── */
+    .noise {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ── AURORA ── */
+    .aurora { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .ao {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: .12;
+    }
+    .ao1 { width: 700px; height: 700px; background: radial-gradient(circle, #00c8ff, transparent 70%); top: -200px; left: -200px; animation: auroraMove1 18s ease-in-out infinite; }
+    .ao2 { width: 500px; height: 500px; background: radial-gradient(circle, #7c3aed, transparent 70%); top: 40%; right: -100px; animation: auroraMove2 22s ease-in-out infinite; }
+    .ao3 { width: 400px; height: 400px; background: radial-gradient(circle, #00e5ff, transparent 70%); bottom: -100px; left: 30%; animation: auroraMove3 16s ease-in-out infinite; }
+    @keyframes auroraMove1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(60px,40px) scale(1.1)} }
+    @keyframes auroraMove2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-50px,30px) scale(1.15)} }
+    @keyframes auroraMove3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-40px) scale(1.08)} }
+
+    /* ── CURSOR ── */
+    #c-dot, #c-ring {
+      position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%);
+      transition: opacity .3s;
+    }
+    #c-dot  { width: 6px; height: 6px; background: var(--cyan); }
+    #c-ring { width: 32px; height: 32px; border: 1.5px solid rgba(0,200,255,.5); transition: transform .12s ease, width .2s, height .2s; }
+
+    /* ── NAVBAR ── */
+    #navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 0;
+      transition: background .3s, border-color .3s;
+    }
+    #navbar.scrolled {
+      background: rgba(5,8,20,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 68px; max-width: 1180px; margin: 0 auto; padding: 0 32px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .lm {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      display: grid; place-items: center;
+      font-family: var(--font-display); font-weight: 800; font-size: 13px; color: #fff;
+    }
+    .lt { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text); }
+    .lt .ld { color: var(--cyan); }
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      font-size: 13px; font-weight: 500; color: var(--muted); text-decoration: none;
+      letter-spacing: .04em; text-transform: uppercase;
+      transition: color .2s; position: relative;
+    }
+    .nav-links a::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px;
+      background: var(--cyan); transition: width .3s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-hire {
+      position: relative; overflow: hidden;
+      padding: 9px 22px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      font-size: 13px; font-weight: 600; color: #fff; text-decoration: none;
+      letter-spacing: .04em;
+    }
+    .nh-shine {
+      position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine { 0%{left:-100%} 100%{left:200%} }
+
+    /* ── HAMBURGER ── */
+    .hb { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
+    .hb span { display: block; width: 22px; height: 2px; background: var(--text); border-radius: 2px; transition: all .3s; }
+    .mob-menu {
+      display: none; flex-direction: column; padding: 16px 24px 24px;
+      background: rgba(8,13,26,.96); border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    .mob-menu a { padding: 12px 0; color: var(--muted); text-decoration: none; font-size: 15px; border-bottom: 1px solid var(--border); }
+    .mob-menu a:last-child { border-bottom: none; }
+    @media(max-width:820px){
+      .nav-links, .nav-hire { display: none; }
+      .hb { display: flex; }
+      .mob-menu.open { display: flex; }
+    }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative; min-height: 100vh;
+      display: flex; align-items: center;
+      overflow: hidden;
+    }
+    #hero-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
+    .hero-grid-lines {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(0,200,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-content {
+      position: relative; z-index: 10;
+      padding: 120px 0 80px;
+    }
+
+    /* badge */
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 18px; border-radius: 100px;
+      border: 1px solid rgba(0,200,255,.25);
+      background: rgba(0,200,255,.06);
+      font-size: 12px; font-weight: 500; color: var(--cyan);
+      letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 32px;
+      opacity: 0; animation: fadeUp .6s .2s forwards;
+    }
+    .hb-pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 0 0 rgba(0,200,255,.5);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,200,255,.5)} 50%{box-shadow:0 0 0 6px rgba(0,200,255,0)} }
+
+    /* hero name */
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 7vw, 92px);
+      font-weight: 800; line-height: 1.0; letter-spacing: -.02em;
+      margin-bottom: 28px;
+    }
+    .hn-line { overflow: hidden; }
+    .word { display: inline-block; opacity: 0; transform: translateY(60px); }
+    .word.outlined {
+      -webkit-text-stroke: 2px rgba(255,255,255,.6);
+      color: transparent;
+    }
+    .word.grd {
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .amp { font-size: .55em; color: var(--muted); display: inline-block; margin-right: 12px; opacity: 0; transform: translateY(60px); }
+
+    /* hero sub */
+    .hero-sub {
+      font-size: 18px; color: var(--muted); max-width: 520px;
+      margin-bottom: 32px; line-height: 1.75;
+      opacity: 0; animation: fadeUp .6s .9s forwards;
+    }
+    .hero-sub em { font-style: normal; color: var(--cyan); font-weight: 500; }
+
+    /* terminal */
+    .hero-terminal {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 10px 20px; border-radius: 8px;
+      background: rgba(0,0,0,.5); border: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 13px; color: var(--text);
+      margin-bottom: 40px;
+      opacity: 0; animation: fadeUp .6s 1.1s forwards;
+    }
+    .ht-prompt { color: var(--cyan); }
+    .typed-cur { animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* hero buttons */
+    .hero-btns {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 56px;
+      opacity: 0; animation: fadeUp .6s 1.3s forwards;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 28px; border-radius: 8px;
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      color: #fff; font-weight: 600; font-size: 14px; text-decoration: none;
+      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,200,255,.3); }
+    .btn-primary.sm { padding: 10px 22px; font-size: 13px; }
+    .btn-primary.full { width: 100%; justify-content: center; cursor: pointer; border: none; }
+    .bp-glow {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+    }
+    .btn-glass {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 28px; border-radius: 8px;
+      border: 1px solid rgba(0,200,255,.3);
+      background: rgba(0,200,255,.06); backdrop-filter: blur(8px);
+      color: var(--text); font-weight: 600; font-size: 14px; text-decoration: none;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .btn-glass:hover { background: rgba(0,200,255,.12); border-color: rgba(0,200,255,.5); transform: translateY(-2px); }
+    .btn-glass.sm { padding: 10px 22px; font-size: 13px; }
+
+    /* hero stats */
+    .hero-stats {
+      display: flex; align-items: center; gap: 0;
+      opacity: 0; animation: fadeUp .6s 1.5s forwards;
+    }
+    .hs { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 0 32px; }
+    .hs:first-child { padding-left: 0; }
+    .hs-n { font-family: var(--font-display); font-size: 40px; font-weight: 800; color: #fff; line-height: 1; }
+    .hs sup { font-size: 18px; color: var(--cyan); vertical-align: super; }
+    .hs small { font-size: 12px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+    .hs-sep { width: 1px; height: 40px; background: var(--border); }
+
+    /* floating tech pills */
+    .tf {
+      position: absolute; z-index: 5;
+      padding: 8px 16px; border-radius: 100px;
+      background: rgba(8,13,26,.9); border: 1px solid var(--border);
+      font-size: 12px; font-weight: 500; color: var(--cyan);
+      display: flex; align-items: center; gap: 7px;
+      animation: floatPill 6s ease-in-out infinite;
+    }
+    .tf svg { width: 14px; height: 14px; }
+    .tf1 { top: 22%; right: 12%; animation-delay: 0s; }
+    .tf2 { top: 38%; right: 8%; animation-delay: 1.5s; }
+    .tf3 { top: 54%; right: 15%; animation-delay: 3s; }
+    .tf4 { top: 68%; right: 9%; animation-delay: 4.5s; }
+    @keyframes floatPill { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+    /* scroll indicator */
+    .scroll-mouse {
+      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+      width: 22px; height: 36px; border-radius: 11px; border: 2px solid rgba(0,200,255,.3);
+      display: flex; justify-content: center; padding-top: 6px; z-index: 10;
+    }
+    .sm-wheel {
+      width: 3px; height: 8px; border-radius: 2px;
+      background: var(--cyan);
+      animation: scrollWheel 2s infinite;
+    }
+    @keyframes scrollWheel { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(12px)} }
+
+    /* ── MARQUEE ── */
+    .marquee {
+      overflow: hidden; padding: 18px 0;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .mq-track {
+      display: flex; gap: 0; white-space: nowrap;
+      animation: marqueeScroll 25s linear infinite;
+    }
+    .mq-track span {
+      padding: 0 24px; font-size: 13px; font-weight: 500;
+      color: var(--muted); letter-spacing: .06em; text-transform: uppercase;
+    }
+    .mq-star { color: var(--cyan) !important; padding: 0 8px !important; }
+    @keyframes marqueeScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+    /* ── SECTION BASE ── */
+    .section { padding: 110px 0; position: relative; z-index: 5; }
+    .s-dark { background: var(--bg2); }
+    .sec-label {
+      font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .sec-label::before {
+      content: ''; display: block; width: 24px; height: 1px; background: var(--cyan);
+    }
+    .sec-title {
+      font-family: var(--font-display); font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 20px;
+    }
+    .sec-title.center { text-align: center; }
+    .sec-title .grd {
+      background: linear-gradient(135deg, var(--cyan), var(--violet));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .stroke-text {
+      -webkit-text-stroke: 2px rgba(255,255,255,.5); color: transparent;
+    }
+    .sec-sub { color: var(--muted); font-size: 16px; text-align: center; max-width: 500px; margin: 0 auto 56px; }
+    .body-p { color: var(--muted); font-size: 16px; line-height: 1.8; margin-bottom: 16px; }
+    .body-p strong { color: var(--text); font-weight: 600; }
+
+    /* ── REVEAL ── */
+    [data-reveal] { opacity: 0; transition: opacity .7s ease, transform .7s ease; }
+    [data-reveal="up"]    { transform: translateY(40px); }
+    [data-reveal="left"]  { transform: translateX(-40px); }
+    [data-reveal="right"] { transform: translateX(40px); }
+    [data-reveal].visible { opacity: 1; transform: none; }
+    [data-reveal] { transition-delay: var(--d, 0s); }
+
+    /* ── ABOUT ── */
+    .about-grid {
+      display: grid; grid-template-columns: 420px 1fr; gap: 80px; align-items: center;
+    }
+    @media(max-width:960px){ .about-grid { grid-template-columns: 1fr; gap: 48px; } }
+
+    /* about left — avatar */
+    .about-left { position: relative; }
+    .a-frame {
+      position: relative; width: 100%; max-width: 340px;
+      border-radius: 16px; overflow: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    /* AI-style SVG avatar */
+    .a-photo {
+      width: 100%; aspect-ratio: 3/4;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .avatar-svg { width: 100%; height: 100%; }
+
+    /* corner decorations */
+    .a-corner {
+      position: absolute; width: 14px; height: 14px;
+      border-color: var(--cyan); border-style: solid;
+    }
+    .ac-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .ac-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+    .ac-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+    .ac-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    /* floating badges */
+    .a-badge {
+      position: absolute; display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-radius: 10px;
+      background: rgba(8,13,26,.92); border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .a-badge b { display: block; font-size: 13px; color: var(--text); }
+    .a-badge small { font-size: 11px; color: var(--muted); }
+    .ab-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); animation: pulse 2s infinite; }
+    .ab1 { bottom: -18px; right: -18px; }
+    .ab2 { top: 24px; right: -20px; }
+
+    /* code deco */
+    .code-deco {
+      margin-top: 28px; padding: 16px 20px; border-radius: 10px;
+      background: rgba(0,0,0,.4); border: 1px solid var(--border);
+      font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--muted);
+    }
+    .cd-kw { color: #c792ea; }
+    .cd-fn { color: var(--cyan); }
+    .cd-s  { color: #c3e88d; }
+
+    /* about tags */
+    .about-tags {
+      display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 32px;
+    }
+    .about-tags span {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px; border-radius: 100px;
+      border: 1px solid var(--border); background: rgba(0,200,255,.05);
+      font-size: 12px; color: var(--muted); font-weight: 500;
+    }
+    .about-tags span svg { width: 14px; height: 14px; color: var(--cyan); }
+    .about-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    /* ── SKILLS ── */
+    .sec-header { text-align: center; margin-bottom: 56px; }
+
+    .skill-orbs {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
+      margin-bottom: 56px;
+    }
+    .so {
+      padding: 16px 24px; border-radius: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      transition: border-color .3s, transform .3s, box-shadow .3s;
+      cursor: default;
+    }
+    .so:hover {
+      border-color: rgba(0,200,255,.4); transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,200,255,.1);
+    }
+    .so-in { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .so-in svg { width: 28px; height: 28px; }
+    .so-in b { font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: .04em; }
+    .hi-a { border-color: rgba(0,200,255,.25); }
+    .hi-b { border-color: rgba(124,58,237,.25); }
+
+    /* skill bars */
+    .sbars { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 48px; }
+    @media(max-width:640px){ .sbars { grid-template-columns: 1fr; } }
+    .sb-top { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 500; }
+    .sb-val { color: var(--cyan); font-family: var(--font-mono); }
+    .sb-track { height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
+    .sb-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--cyan), var(--violet)); width: 0; transition: width 1.4s cubic-bezier(.4,0,.2,1); }
+
+    /* ── WHY ME ── */
+    .why-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 24px;
+    }
+    @media(max-width:768px){ .why-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:480px){ .why-grid { grid-template-columns: 1fr; } }
+    .wc {
+      padding: 32px 28px; border-radius: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      transition: border-color .3s, transform .3s;
+    }
+    .wc:hover { border-color: rgba(0,200,255,.3); transform: translateY(-4px); }
+    .wc-g { margin-bottom: 18px; }
+    .wc-g svg { width: 32px; height: 32px; color: var(--cyan); }
+    .wc h3 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+    .wc p { font-size: 14px; color: var(--muted); line-height: 1.75; }
+
+    /* ── SERVICES ── */
+    .srv-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+    @media(max-width:768px){ .srv-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:480px){ .srv-grid { grid-template-columns: 1fr; } }
+    .sv {
+      padding: 36px 28px; border-radius: 14px;
+      background: var(--bg2); border: 1px solid var(--border);
+      position: relative; overflow: hidden;
+      transition: border-color .3s, transform .3s;
+    }
+    .sv::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: 0; transition: opacity .3s;
+    }
+    .sv:hover { border-color: rgba(0,200,255,.3); transform: translateY(-4px); }
+    .sv:hover::before { opacity: 1; }
+    .sv-icon { margin-bottom: 20px; }
+    .sv-icon svg { width: 36px; height: 36px; color: var(--cyan); }
+    .sv h3 { font-family: var(--font-display); font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .sv p  { font-size: 14px; color: var(--muted); line-height: 1.75; margin-bottom: 20px; }
+    .sv-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .sv-tags span {
+      padding: 4px 12px; border-radius: 100px; font-size: 11px; font-weight: 500;
+      background: rgba(0,200,255,.08); border: 1px solid rgba(0,200,255,.15); color: var(--cyan);
+    }
+
+    /* ── PROJECTS ── */
+    .proj-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+    @media(max-width:768px){ .proj-grid { grid-template-columns: 1fr 1fr; } }
+    @media(max-width:480px){ .proj-grid { grid-template-columns: 1fr; } }
+    .pj {
+      border-radius: 14px; overflow: hidden;
+      background: var(--surface); border: 1px solid var(--border);
+      transition: border-color .3s, transform .3s, box-shadow .3s;
+    }
+    .pj:hover { border-color: rgba(0,200,255,.3); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,.3); }
+    .pj-thumb {
+      width: 100%; aspect-ratio: 16/9;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .pj-thumb svg.project-art { width: 100%; height: 100%; }
+    .pj-body { padding: 22px; }
+    .pj-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .pj-tags span {
+      font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 100px;
+      background: rgba(0,200,255,.08); border: 1px solid rgba(0,200,255,.15); color: var(--cyan);
+    }
+    .pj h3 { font-family: var(--font-display); font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .pj p  { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 18px; }
+    .pj-links { display: flex; gap: 12px; }
+    .pj-links a {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: var(--cyan); text-decoration: none;
+      transition: opacity .2s;
+    }
+    .pj-links a svg { width: 13px; height: 13px; }
+    .pj-links a:hover { opacity: .7; }
+
+    /* ── CONTACT ── */
+    .contact-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+    @media(max-width:768px){ .contact-wrap { grid-template-columns: 1fr; gap: 48px; } }
+
+    .c-links { display: flex; flex-direction: column; gap: 14px; margin-top: 32px; }
+    .cl {
+      display: flex; align-items: center; gap: 14px; padding: 14px 18px;
+      border-radius: 10px; background: var(--surface); border: 1px solid var(--border);
+      text-decoration: none; color: var(--text); transition: border-color .2s;
+    }
+    .cl:hover { border-color: rgba(0,200,255,.35); }
+    .cli {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(0,200,255,.08); border: 1px solid rgba(0,200,255,.15);
+      display: grid; place-items: center;
+    }
+    .cli svg { width: 16px; height: 16px; color: var(--cyan); }
+    .cl-a { margin-left: auto; color: var(--muted); font-size: 16px; }
+    .cl-loc { cursor: default; }
+
+    /* contact form */
+    .cf-wrap {
+      padding: 40px; border-radius: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .cf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:480px){ .cf-row { grid-template-columns: 1fr; } }
+    .cf-g { position: relative; margin-bottom: 20px; }
+    .cf-g input, .cf-g textarea {
+      width: 100%; padding: 16px; border-radius: 8px;
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+      color: var(--text); font-family: var(--font-body); font-size: 14px;
+      outline: none; transition: border-color .2s;
+    }
+    .cf-g input:focus, .cf-g textarea:focus { border-color: rgba(0,200,255,.4); }
+    .cf-g label {
+      position: absolute; left: 16px; top: 16px;
+      font-size: 13px; color: var(--muted); pointer-events: none;
+      transition: all .2s;
+    }
+    .cf-g input:not(:placeholder-shown) + label,
+    .cf-g input:focus + label,
+    .cf-g textarea:not(:placeholder-shown) + label,
+    .cf-g textarea:focus + label {
+      top: -9px; left: 12px; font-size: 11px;
+      background: var(--surface); padding: 0 6px; color: var(--cyan);
+    }
+    .ce { font-size: 11px; color: #f87171; margin-top: 4px; display: block; }
+    .cf-ok {
+      display: none; align-items: center; gap: 14px; margin-top: 16px;
+      padding: 16px; border-radius: 10px;
+      background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.2);
+    }
+    .cf-ok span { font-size: 20px; color: #22c55e; }
+    .cf-ok strong { display: block; font-size: 14px; }
+    .cf-ok small { font-size: 12px; color: var(--muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 48px 0 28px; position: relative; z-index: 5;
+    }
+    .ft-glow {
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 300px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    }
+    .ft-top {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 24px; margin-bottom: 40px;
+    }
+    .ft-brand { display: flex; align-items: center; gap: 12px; }
+    .ft-brand strong { display: block; font-size: 15px; }
+    .ft-brand span { font-size: 12px; color: var(--muted); }
+    .ft-nav { display: flex; gap: 28px; }
+    .ft-nav a { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .ft-nav a:hover { color: var(--cyan); }
+    .ft-soc { display: flex; gap: 10px; }
+    .sb-btn {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      display: grid; place-items: center; color: var(--muted); text-decoration: none;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .sb-btn svg { width: 16px; height: 16px; }
+    .sb-btn:hover { background: rgba(0,200,255,.1); border-color: rgba(0,200,255,.3); color: var(--cyan); }
+    .sb-wa:hover { background: rgba(37,211,102,.1); border-color: rgba(37,211,102,.3); color: #25d366; }
+    .ft-bottom {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+      padding-top: 28px; border-top: 1px solid var(--border);
+    }
+    .ft-bottom p { font-size: 13px; color: var(--muted); }
+    #backToTop {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer;
+      transition: color .2s;
+    }
+    #backToTop svg { width: 14px; height: 14px; }
+    #backToTop:hover { color: var(--cyan); }
+
+    /* ── WHATSAPP FAB ── */
+    .wa-fab {
+      position: fixed; bottom: 28px; right: 28px; z-index: 900;
+      text-decoration: none;
+    }
+    .wa-body {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: #25d366; display: grid; place-items: center;
+      position: relative; z-index: 2;
+      box-shadow: 0 4px 20px rgba(37,211,102,.35);
+      transition: transform .2s;
+    }
+    .wa-body svg { width: 26px; height: 26px; }
+    .wa-fab:hover .wa-body { transform: scale(1.1); }
+    .wa-pulse {
+      position: absolute; width: 54px; height: 54px; border-radius: 50%;
+      background: rgba(37,211,102,.3); animation: waPulse 2s infinite;
+    }
+    .p2 { animation-delay: .5s; }
+    .wa-tip {
+      position: absolute; right: 64px; top: 50%; transform: translateY(-50%);
+      white-space: nowrap; padding: 6px 12px; border-radius: 6px;
+      background: rgba(8,13,26,.9); border: 1px solid var(--border);
+      font-size: 12px; color: var(--text);
+      opacity: 0; transition: opacity .2s; pointer-events: none;
+    }
+    .wa-fab:hover .wa-tip { opacity: 1; }
+    @keyframes waPulse { 0%{transform:scale(1);opacity:.6} 100%{transform:scale(1.8);opacity:0} }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { to { opacity: 1; transform: none; } }
+    .spin { animation: spinAnim 1s linear infinite; }
+    @keyframes spinAnim { to { transform: rotate(360deg); } }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: var(--bg); display: grid; place-items: center;
+      transition: opacity .5s, visibility .5s;
+    }
+    #loader.done { opacity: 0; visibility: hidden; }
+    .ld-wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .ld-ring { position: relative; width: 80px; height: 80px; }
+    .ld-ring svg { position: absolute; inset: 0; }
+    .ld-letters {
+      position: absolute; inset: 0; display: grid; place-items: center;
+      font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--cyan);
+    }
+    .ld-arc { animation: loaderArc 1.4s ease-in-out infinite; transform-origin: center; }
+    @keyframes loaderArc {
+      0%   { stroke-dashoffset: 226; transform: rotate(0deg); }
+      50%  { stroke-dashoffset: 56; }
+      100% { stroke-dashoffset: 226; transform: rotate(360deg); }
+    }
+    .ld-text { font-size: 13px; color: var(--muted); font-family: var(--font-mono); }
+    .ld-dots span { animation: dotBlink 1.4s infinite; }
+    .ld-dots span:nth-child(2) { animation-delay: .2s; }
+    .ld-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes dotBlink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+    /* ── responsive ── */
+    @media(max-width:640px){
+      .hero-name { font-size: 42px; }
+      .tf { display: none; }
+      .hero-stats .hs { padding: 0 16px; }
+      .hero-stats .hs-n { font-size: 30px; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- NOISE -->
 <div class="noise" aria-hidden="true"></div>
-
-<!-- AURORA -->
 <div class="aurora" aria-hidden="true">
   <div class="ao ao1"></div>
   <div class="ao ao2"></div>
@@ -48,11 +726,10 @@
 <!-- CURSOR -->
 <div id="c-dot"  aria-hidden="true"></div>
 <div id="c-ring" aria-hidden="true"></div>
-<div id="c-glow" aria-hidden="true"></div>
 
 <!-- WHATSAPP FAB -->
 <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer"
-   class="wa-fab" id="waFab" aria-label="Chat on WhatsApp">
+   class="wa-fab" aria-label="Chat on WhatsApp">
   <div class="wa-pulse p1"></div>
   <div class="wa-pulse p2"></div>
   <div class="wa-body">
@@ -65,17 +742,17 @@
 
 <!-- NAVBAR -->
 <header id="navbar">
-  <nav class="nav-inner container">
+  <nav class="nav-inner">
     <a href="#hero" class="logo">
       <div class="lm"><span>YR</span></div>
       <span class="lt">Yasir<span class="ld">.</span></span>
     </a>
     <ul class="nav-links">
-      <li><a href="#about"    class="nl">About</a></li>
-      <li><a href="#skills"   class="nl">Skills</a></li>
-      <li><a href="#services" class="nl">Services</a></li>
-      <li><a href="#projects" class="nl">Projects</a></li>
-      <li><a href="#contact"  class="nl">Contact</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
     </ul>
     <a href="#contact" class="nav-hire">
       <span>Hire Me</span>
@@ -86,22 +763,20 @@
     </button>
   </nav>
   <div class="mob-menu" id="mobileMenu" aria-hidden="true">
-    <a href="#about"    class="ml">About</a>
-    <a href="#skills"   class="ml">Skills</a>
-    <a href="#services" class="ml">Services</a>
-    <a href="#projects" class="ml">Projects</a>
-    <a href="#contact"  class="ml">Contact</a>
+    <a href="#about">About</a>
+    <a href="#skills">Skills</a>
+    <a href="#services">Services</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact">Contact</a>
   </div>
 </header>
 
 <main>
 
-<!-- ═══════════ HERO ═══════════ -->
+<!-- ═══ HERO ═══ -->
 <section id="hero">
   <canvas id="hero-canvas" aria-hidden="true"></canvas>
   <div class="hero-grid-lines" aria-hidden="true"></div>
-  <div class="h-orb ha" aria-hidden="true"></div>
-  <div class="h-orb hb" aria-hidden="true"></div>
 
   <div class="hero-content container">
 
@@ -111,9 +786,9 @@
     </div>
 
     <h1 class="hero-name" id="heroName">
-      <div class="hn-line"><span class="word w1">Full</span> <span class="word w2">Stack</span></div>
+      <div class="hn-line"><span class="word w1">Full</span>&nbsp;<span class="word w2">Stack</span></div>
       <div class="hn-line"><span class="word w3 outlined">Developer</span></div>
-      <div class="hn-line"><span class="amp">&amp;</span> <span class="word w4 grd">Product</span> <span class="word w5 grd">Builder</span></div>
+      <div class="hn-line"><span class="amp">&amp;</span><span class="word w4 grd">Product</span>&nbsp;<span class="word w5 grd">Builder</span></div>
     </h1>
 
     <p class="hero-sub" id="heroSub">
@@ -145,11 +820,23 @@
 
   </div>
 
-  <!-- floating tech pills -->
-  <div class="tf tf1" aria-hidden="true">⚡ Node.js</div>
-  <div class="tf tf2" aria-hidden="true">⚛ React.js</div>
-  <div class="tf tf3" aria-hidden="true">🗃 SQL</div>
-  <div class="tf tf4" aria-hidden="true">📡 REST API</div>
+  <!-- floating tech pills with SVG icons -->
+  <div class="tf tf1" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    Node.js
+  </div>
+  <div class="tf tf2" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="2"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(0)"/></svg>
+    React.js
+  </div>
+  <div class="tf tf3" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v4c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 10v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4"/></svg>
+    SQL
+  </div>
+  <div class="tf tf4" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    REST API
+  </div>
 
   <div class="scroll-mouse" aria-hidden="true"><div class="sm-wheel"></div></div>
 </section>
@@ -176,34 +863,200 @@
   </div>
 </div>
 
-<!-- ═══════════ ABOUT ═══════════ -->
+<!-- ═══ ABOUT ═══ -->
 <section id="about" class="section">
   <div class="container">
     <div class="about-grid">
 
       <div class="about-left" data-reveal="left">
         <div class="a-frame">
+          <!-- SVG Developer Avatar (AI-style illustration) -->
           <div class="a-photo">
-            <svg viewBox="0 0 120 140" fill="none" aria-hidden="true">
-              <circle cx="60" cy="50" r="28" stroke="rgba(0,200,255,.35)" stroke-width="1.5" fill="rgba(0,200,255,.04)"/>
-              <path d="M14 135c0-25.4 20.6-46 46-46s46 20.6 46 46" stroke="rgba(0,200,255,.35)" stroke-width="1.5"/>
+            <svg class="avatar-svg" viewBox="0 0 340 420" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Developer portrait illustration">
+              <!-- Background glow -->
+              <defs>
+                <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+                  <stop offset="0%" stop-color="#0d2040"/>
+                  <stop offset="100%" stop-color="#050814"/>
+                </radialGradient>
+                <radialGradient id="skinGrad" cx="50%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#c8956c"/>
+                  <stop offset="100%" stop-color="#a0694a"/>
+                </radialGradient>
+                <radialGradient id="glowFace" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#00c8ff" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#00c8ff" stop-opacity="0"/>
+                </radialGradient>
+                <linearGradient id="shirtGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#1a2a4a"/>
+                  <stop offset="100%" stop-color="#0d1526"/>
+                </linearGradient>
+                <linearGradient id="screenGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00c8ff" stop-opacity="0.8"/>
+                  <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.8"/>
+                </linearGradient>
+                <filter id="softBlur">
+                  <feGaussianBlur stdDeviation="3"/>
+                </filter>
+              </defs>
+
+              <!-- BG -->
+              <rect width="340" height="420" fill="url(#bgGrad)"/>
+
+              <!-- Ambient glow behind figure -->
+              <ellipse cx="170" cy="260" rx="110" ry="130" fill="#00c8ff" opacity="0.05" filter="url(#softBlur)"/>
+
+              <!-- Grid lines subtle bg -->
+              <line x1="0" y1="80" x2="340" y2="80" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+              <line x1="0" y1="160" x2="340" y2="160" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+              <line x1="0" y1="240" x2="340" y2="240" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+              <line x1="0" y1="320" x2="340" y2="320" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+              <line x1="80" y1="0" x2="80" y2="420" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+              <line x1="170" y1="0" x2="170" y2="420" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+              <line x1="260" y1="0" x2="260" y2="420" stroke="rgba(0,200,255,0.06)" stroke-width="1"/>
+
+              <!-- Laptop screen glow on face -->
+              <ellipse cx="170" cy="200" rx="80" ry="70" fill="url(#glowFace)"/>
+
+              <!-- BODY / TORSO -->
+              <path d="M60 420 C60 320 105 295 170 290 C235 295 280 320 280 420Z" fill="url(#shirtGrad)" stroke="rgba(0,200,255,0.15)" stroke-width="1"/>
+
+              <!-- Shirt collar detail -->
+              <path d="M148 292 L170 310 L192 292" stroke="rgba(0,200,255,0.3)" stroke-width="1.5" fill="none"/>
+
+              <!-- Shirt subtle pattern lines -->
+              <line x1="120" y1="340" x2="150" y2="420" stroke="rgba(0,200,255,0.04)" stroke-width="1"/>
+              <line x1="170" y1="320" x2="170" y2="420" stroke="rgba(0,200,255,0.04)" stroke-width="1"/>
+              <line x1="220" y1="340" x2="190" y2="420" stroke="rgba(0,200,255,0.04)" stroke-width="1"/>
+
+              <!-- NECK -->
+              <rect x="153" y="262" width="34" height="34" rx="12" fill="#b07d5a"/>
+
+              <!-- HEAD -->
+              <ellipse cx="170" cy="200" rx="68" ry="78" fill="url(#skinGrad)"/>
+
+              <!-- Hair -->
+              <path d="M102 185 C102 120 238 120 238 185 C238 165 225 118 170 112 C115 118 102 165 102 185Z" fill="#1a0a00"/>
+              <!-- Hair texture -->
+              <path d="M115 150 C120 135 135 125 155 120" stroke="#2a1500" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M225 150 C220 135 205 125 185 120" stroke="#2a1500" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <!-- Side hair -->
+              <path d="M102 175 C98 195 99 215 104 228" stroke="#1a0a00" stroke-width="8" fill="none" stroke-linecap="round"/>
+              <path d="M238 175 C242 195 241 215 236 228" stroke="#1a0a00" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+              <!-- Ear left -->
+              <ellipse cx="103" cy="205" rx="9" ry="13" fill="#a8734e"/>
+              <path d="M107 200 C109 205 107 212 105 213" stroke="#8a5a38" stroke-width="1.5" fill="none"/>
+              <!-- Ear right -->
+              <ellipse cx="237" cy="205" rx="9" ry="13" fill="#a8734e"/>
+              <path d="M233 200 C231 205 233 212 235 213" stroke="#8a5a38" stroke-width="1.5" fill="none"/>
+
+              <!-- Eyebrows -->
+              <path d="M133 176 C140 171 150 170 158 173" stroke="#2a1500" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M182 173 C190 170 200 171 207 176" stroke="#2a1500" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+              <!-- Eyes (focused developer look) -->
+              <!-- Left eye -->
+              <ellipse cx="145" cy="193" rx="14" ry="11" fill="white"/>
+              <circle cx="147" cy="193" r="8" fill="#3d2b1f"/>
+              <circle cx="147" cy="193" r="5" fill="#1a0f09"/>
+              <circle cx="150" cy="190" r="2" fill="white"/>
+              <!-- Left eye lid -->
+              <path d="M131 187 C138 182 152 182 159 187" stroke="#8a5a38" stroke-width="1.5" fill="none"/>
+
+              <!-- Right eye -->
+              <ellipse cx="195" cy="193" rx="14" ry="11" fill="white"/>
+              <circle cx="193" cy="193" r="8" fill="#3d2b1f"/>
+              <circle cx="193" cy="193" r="5" fill="#1a0f09"/>
+              <circle cx="196" cy="190" r="2" fill="white"/>
+              <!-- Right eye lid -->
+              <path d="M181 187 C188 182 202 182 209 187" stroke="#8a5a38" stroke-width="1.5" fill="none"/>
+
+              <!-- Nose -->
+              <path d="M166 200 C163 212 162 218 166 221 C170 224 174 221 178 218 C182 215 177 212 174 200" stroke="#8a5a38" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+              <!-- Subtle smile -->
+              <path d="M153 237 C158 243 182 243 187 237" stroke="#8a5a38" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+              <!-- Subtle beard shadow -->
+              <path d="M122 235 C130 255 155 268 170 268 C185 268 210 255 218 235" stroke="#8a5a38" stroke-width="1" fill="rgba(100,60,30,0.08)" stroke-opacity="0.5"/>
+
+              <!-- LAPTOP / hands area -->
+              <!-- Arms -->
+              <path d="M105 310 C85 330 75 370 80 420" stroke="#a8734e" stroke-width="22" fill="none" stroke-linecap="round"/>
+              <path d="M235 310 C255 330 265 370 260 420" stroke="#a8734e" stroke-width="22" fill="none" stroke-linecap="round"/>
+              <!-- Shirt over arms -->
+              <path d="M108 308 C88 328 78 368 83 420" stroke="url(#shirtGrad)" stroke-width="26" fill="none" stroke-linecap="round"/>
+              <path d="M232 308 C252 328 262 368 257 420" stroke="url(#shirtGrad)" stroke-width="26" fill="none" stroke-linecap="round"/>
+
+              <!-- Laptop body -->
+              <rect x="72" y="360" width="196" height="8" rx="3" fill="#1e2d45" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+
+              <!-- Laptop screen frame -->
+              <rect x="88" y="320" width="164" height="48" rx="4" fill="#0d1526" stroke="rgba(0,200,255,0.3)" stroke-width="1.5"/>
+              <!-- Screen content -->
+              <rect x="93" y="325" width="154" height="38" rx="2" fill="#060d1a"/>
+              <!-- Code lines on screen -->
+              <rect x="98" y="330" width="45" height="2.5" rx="1" fill="#c792ea" opacity="0.9"/>
+              <rect x="147" y="330" width="30" height="2.5" rx="1" fill="#c3e88d" opacity="0.9"/>
+              <rect x="181" y="330" width="20" height="2.5" rx="1" fill="#82aaff" opacity="0.9"/>
+              <rect x="103" y="336" width="60" height="2.5" rx="1" fill="#00c8ff" opacity="0.9"/>
+              <rect x="167" y="336" width="35" height="2.5" rx="1" fill="#c3e88d" opacity="0.9"/>
+              <rect x="98" y="342" width="40" height="2.5" rx="1" fill="#c792ea" opacity="0.7"/>
+              <rect x="142" y="342" width="55" height="2.5" rx="1" fill="#82aaff" opacity="0.7"/>
+              <rect x="103" y="348" width="70" height="2.5" rx="1" fill="#00c8ff" opacity="0.6"/>
+              <!-- Cursor blink on screen -->
+              <rect x="98" y="354" width="2" height="5" rx="1" fill="#00c8ff" opacity="0.9">
+                <animate attributeName="opacity" values="0.9;0;0.9" dur="1.2s" repeatCount="indefinite"/>
+              </rect>
+
+              <!-- Screen glow reflection on face -->
+              <ellipse cx="170" cy="250" rx="60" ry="20" fill="#00c8ff" opacity="0.04"/>
+
+              <!-- Glasses (optional stylish touch) -->
+              <!-- Left lens frame -->
+              <rect x="126" y="183" width="38" height="26" rx="8" fill="none" stroke="rgba(0,200,255,0.35)" stroke-width="1.5"/>
+              <!-- Right lens frame -->
+              <rect x="176" y="183" width="38" height="26" rx="8" fill="none" stroke="rgba(0,200,255,0.35)" stroke-width="1.5"/>
+              <!-- Bridge -->
+              <line x1="164" y1="196" x2="176" y2="196" stroke="rgba(0,200,255,0.35)" stroke-width="1.5"/>
+              <!-- Temple left -->
+              <line x1="126" y1="196" x2="103" y2="200" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/>
+              <!-- Temple right -->
+              <line x1="214" y1="196" x2="237" y2="200" stroke="rgba(0,200,255,0.25)" stroke-width="1.5"/>
+
+              <!-- Scan line overlay (tech feel) -->
+              <rect width="340" height="420" fill="url(#scanLines)" opacity="0.03">
+                <animate attributeName="y" from="0" to="10" dur="0.1s" repeatCount="indefinite"/>
+              </rect>
+
+              <!-- Corner tech markers -->
+              <path d="M0 30 L0 0 L30 0" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" fill="none"/>
+              <path d="M340 30 L340 0 L310 0" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" fill="none"/>
+              <path d="M0 390 L0 420 L30 420" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" fill="none"/>
+              <path d="M340 390 L340 420 L310 420" stroke="rgba(0,200,255,0.5)" stroke-width="1.5" fill="none"/>
+
+              <!-- Label overlay bottom -->
+              <rect x="0" y="390" width="340" height="30" fill="rgba(5,8,20,0.6)"/>
+              <text x="16" y="409" font-family="Space Mono, monospace" font-size="10" fill="rgba(0,200,255,0.7)">YASIR_RASHEED.dev</text>
+              <text x="280" y="409" font-family="Space Mono, monospace" font-size="10" fill="rgba(0,200,255,0.4)">v2.0</text>
             </svg>
-            <span>Your Photo</span>
           </div>
-          <div class="a-border"></div>
           <div class="a-corner ac-tl"></div>
           <div class="a-corner ac-tr"></div>
           <div class="a-corner ac-bl"></div>
           <div class="a-corner ac-br"></div>
         </div>
-        <div class="a-badge ab1" aria-hidden="true">
+
+        <div class="a-badge ab1">
           <div class="ab-dot"></div>
           <div><b>Open to Work</b><small>Available Now</small></div>
         </div>
-        <div class="a-badge ab2" aria-hidden="true">
-          <span>⚡</span>
+        <div class="a-badge ab2">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="2" aria-hidden="true"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           <div><b>4+ Years</b><small>Experience</small></div>
         </div>
+
         <div class="code-deco" aria-hidden="true">
           <span class="cd-kw">const</span> <span class="cd-fn">yasir</span> = {<br/>
           &nbsp;&nbsp;role: <span class="cd-s">"Full Stack"</span>,<br/>
@@ -215,18 +1068,31 @@
       <div class="about-right" data-reveal="right">
         <div class="sec-label">About Me</div>
         <h2 class="sec-title">
-          Engineering products<br/>
-          that actually<br/>
+          Engineering products<br/>that actually<br/>
           <span class="stroke-text">ship.</span>
         </h2>
         <p class="body-p">I'm a Full Stack Developer with a sharp focus on turning complex requirements into clean, scalable software. My work lives at the intersection of <strong>technical precision</strong> and <strong>product strategy</strong>.</p>
         <p class="body-p">From architecting Node.js backends to building reactive React interfaces, I approach every project with a systems-thinking mindset. I've shipped SaaS platforms, admin dashboards, REST APIs, and data-driven apps.</p>
+
         <div class="about-tags">
-          <span>💡 Problem Solver</span>
-          <span>🏗️ Systems Thinker</span>
-          <span>🚀 Product-Minded</span>
-          <span>📐 Clean Code</span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Problem Solver
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Systems Thinker
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Product-Minded
+          </span>
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Clean Code
+          </span>
         </div>
+
         <div class="about-actions">
           <a href="https://www.linkedin.com/in/yasir-rasheed-dev" target="_blank" rel="noopener noreferrer" class="btn-primary sm">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
@@ -240,130 +1106,446 @@
   </div>
 </section>
 
-<!-- ═══════════ SKILLS ═══════════ -->
+<!-- ═══ SKILLS ═══ -->
 <section id="skills" class="section s-dark">
   <div class="container">
     <div class="sec-header" data-reveal="up">
-      <div class="sec-label">Technical Arsenal</div>
+      <div class="sec-label" style="justify-content:center">Technical Arsenal</div>
       <h2 class="sec-title center">Built on solid <span class="grd">foundations.</span></h2>
       <p class="sec-sub">The stack I use to architect and deliver products at scale.</p>
     </div>
 
     <div class="skill-orbs" data-reveal="up" style="--d:.1s">
-      <div class="so hi-a"><div class="so-in"><span>⚡</span><b>Node.js</b></div></div>
-      <div class="so hi-b"><div class="so-in"><span>⚛️</span><b>React.js</b></div></div>
-      <div class="so"><div class="so-in"><span>🗃️</span><b>SQL</b></div></div>
-      <div class="so"><div class="so-in"><span>🏗️</span><b>Design</b></div></div>
-      <div class="so hi-a"><div class="so-in"><span>🚀</span><b>Product</b></div></div>
-      <div class="so"><div class="so-in"><span>📡</span><b>APIs</b></div></div>
-      <div class="so"><div class="so-in"><span>🔧</span><b>Express</b></div></div>
-      <div class="so hi-b"><div class="so-in"><span>🎨</span><b>CSS/UI</b></div></div>
-      <div class="so"><div class="so-in"><span>🐙</span><b>Git</b></div></div>
-      <div class="so"><div class="so-in"><span>☁️</span><b>Deploy</b></div></div>
+
+      <div class="so hi-a">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <b>Node.js</b>
+        </div>
+      </div>
+      <div class="so hi-b">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.5"><circle cx="12" cy="12" r="2.5"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(0)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>
+          <b>React.js</b>
+        </div>
+      </div>
+      <div class="so">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6b7a9a" stroke-width="1.5"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v4c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 10v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4"/></svg>
+          <b>SQL</b>
+        </div>
+      </div>
+      <div class="so">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6b7a9a" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+          <b>Design</b>
+        </div>
+      </div>
+      <div class="so hi-a">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#00c8ff" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <b>Product</b>
+        </div>
+      </div>
+      <div class="so">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6b7a9a" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <b>APIs</b>
+        </div>
+      </div>
+      <div class="so">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6b7a9a" stroke-width="1.5"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+          <b>Express</b>
+        </div>
+      </div>
+      <div class="so hi-b">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <b>CSS/UI</b>
+        </div>
+      </div>
+      <div class="so">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6b7a9a" stroke-width="1.5"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 01-2 2H8a2 2 0 01-2-2V9"/><path d="M12 12v3"/></svg>
+          <b>Git</b>
+        </div>
+      </div>
+      <div class="so">
+        <div class="so-in">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6b7a9a" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <b>Deploy</b>
+        </div>
+      </div>
+
     </div>
 
     <div class="sbars" data-reveal="up" style="--d:.2s">
-      <div class="sb">
-        <div class="sb-top"><span>Frontend Development</span><span class="sb-val">88%</span></div>
-        <div class="sb-track"><div class="sb-fill" data-w="88"></div></div>
-      </div>
-      <div class="sb">
-        <div class="sb-top"><span>Backend / Node.js</span><span class="sb-val">92%</span></div>
-        <div class="sb-track"><div class="sb-fill" data-w="92"></div></div>
-      </div>
-      <div class="sb">
-        <div class="sb-top"><span>Database Design</span><span class="sb-val">85%</span></div>
-        <div class="sb-track"><div class="sb-fill" data-w="85"></div></div>
-      </div>
-      <div class="sb">
-        <div class="sb-top"><span>Product Thinking</span><span class="sb-val">90%</span></div>
-        <div class="sb-track"><div class="sb-fill" data-w="90"></div></div>
-      </div>
-      <div class="sb">
-        <div class="sb-top"><span>System Design</span><span class="sb-val">80%</span></div>
-        <div class="sb-track"><div class="sb-fill" data-w="80"></div></div>
-      </div>
-      <div class="sb">
-        <div class="sb-top"><span>API Architecture</span><span class="sb-val">87%</span></div>
-        <div class="sb-track"><div class="sb-fill" data-w="87"></div></div>
-      </div>
+      <div class="sb"><div class="sb-top"><span>Frontend Development</span><span class="sb-val">88%</span></div><div class="sb-track"><div class="sb-fill" data-w="88"></div></div></div>
+      <div class="sb"><div class="sb-top"><span>Backend / Node.js</span><span class="sb-val">92%</span></div><div class="sb-track"><div class="sb-fill" data-w="92"></div></div></div>
+      <div class="sb"><div class="sb-top"><span>Database Design</span><span class="sb-val">85%</span></div><div class="sb-track"><div class="sb-fill" data-w="85"></div></div></div>
+      <div class="sb"><div class="sb-top"><span>Product Thinking</span><span class="sb-val">90%</span></div><div class="sb-track"><div class="sb-fill" data-w="90"></div></div></div>
+      <div class="sb"><div class="sb-top"><span>System Design</span><span class="sb-val">80%</span></div><div class="sb-track"><div class="sb-fill" data-w="80"></div></div></div>
+      <div class="sb"><div class="sb-top"><span>API Architecture</span><span class="sb-val">87%</span></div><div class="sb-track"><div class="sb-fill" data-w="87"></div></div></div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════ SOLAR SYSTEM 3D ═══════════ -->
-
-<!-- ═══════════ WHY ME ═══════════ -->
-<section id="why" class="section">
+<!-- ═══ SERVICES ═══ -->
+<section id="services" class="section">
   <div class="container">
     <div class="sec-header" data-reveal="up">
-      <div class="sec-label">Why Work With Me</div>
+      <div class="sec-label" style="justify-content:center">What I Do</div>
+      <h2 class="sec-title center">Services I <span class="grd">provide.</span></h2>
+      <p class="sec-sub">End-to-end engineering — from architecture to deployment.</p>
+    </div>
+    <div class="srv-grid" data-reveal="up" style="--d:.1s">
+
+      <div class="sv">
+        <div class="sv-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/></svg>
+        </div>
+        <h3>Full Stack Web Apps</h3>
+        <p>End-to-end development from database design to polished UI. Built for performance and scale.</p>
+        <div class="sv-tags"><span>React</span><span>Node.js</span><span>PostgreSQL</span></div>
+      </div>
+
+      <div class="sv">
+        <div class="sv-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <h3>REST API Development</h3>
+        <p>Scalable, well-documented APIs with proper auth, rate limiting, and clean architecture.</p>
+        <div class="sv-tags"><span>Express</span><span>REST</span><span>JWT</span></div>
+      </div>
+
+      <div class="sv">
+        <div class="sv-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v4c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 10v4c0 1.66 3.58 3 8 3s8-1.34 8-3v-4"/></svg>
+        </div>
+        <h3>Database Architecture</h3>
+        <p>Schema design, query optimisation, migrations, and data modelling for complex domains.</p>
+        <div class="sv-tags"><span>PostgreSQL</span><span>MySQL</span><span>Redis</span></div>
+      </div>
+
+      <div class="sv">
+        <div class="sv-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3>SaaS Product Development</h3>
+        <p>Multi-tenant platforms, billing systems, dashboards, and admin panels built to grow.</p>
+        <div class="sv-tags"><span>SaaS</span><span>Stripe</span><span>Multi-tenant</span></div>
+      </div>
+
+      <div class="sv">
+        <div class="sv-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        </div>
+        <h3>Technical Consulting</h3>
+        <p>Architecture reviews, tech stack guidance, code audits, and product roadmap input.</p>
+        <div class="sv-tags"><span>Architecture</span><span>Review</span><span>Strategy</span></div>
+      </div>
+
+      <div class="sv">
+        <div class="sv-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        </div>
+        <h3>Deployment & DevOps</h3>
+        <p>CI/CD pipelines, VPS configuration, Docker setups, and monitoring for production systems.</p>
+        <div class="sv-tags"><span>Docker</span><span>CI/CD</span><span>VPS</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WHY ME ═══ -->
+<section id="why" class="section s-dark">
+  <div class="container">
+    <div class="sec-header" data-reveal="up">
+      <div class="sec-label" style="justify-content:center">Why Work With Me</div>
       <h2 class="sec-title center">The difference is in <span class="grd">how I think.</span></h2>
     </div>
     <div class="why-grid" data-reveal="up" style="--d:.1s">
-      <div class="wc"><div class="wc-g">🧠</div><h3>Product Mindset First</h3><p>I understand the "why" behind features, push back when needed, and help teams build what actually matters.</p></div>
-      <div class="wc"><div class="wc-g">🏛️</div><h3>Architecture That Scales</h3><p>Every system I design is built to grow — data models, API contracts, frontend composition.</p></div>
-      <div class="wc"><div class="wc-g">📐</div><h3>Clean Code, Always</h3><p>Readable, maintainable, well-commented code. Future developers deserve clarity, not archaeology.</p></div>
-      <div class="wc"><div class="wc-g">💼</div><h3>Business-Oriented</h3><p>I optimize for impact: faster time-to-market, reduced costs, better user retention.</p></div>
-      <div class="wc"><div class="wc-g">⚡</div><h3>Modern Tech Expertise</h3><p>I work with the modern React + Node.js ecosystem and apply patterns teams can build on.</p></div>
-      <div class="wc"><div class="wc-g">🤝</div><h3>Clear Communication</h3><p>Good docs, clear tradeoffs, stakeholders in the loop — without the jargon wall.</p></div>
+
+      <div class="wc">
+        <div class="wc-g">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6M9 16h6M9 8h6"/><path d="M5 2h14a2 2 0 012 2v16a2 2 0 01-2 2H5a2 2 0 01-2-2V4a2 2 0 012-2z"/></svg>
+        </div>
+        <h3>Product Mindset First</h3>
+        <p>I understand the "why" behind features, push back when needed, and help teams build what actually matters.</p>
+      </div>
+
+      <div class="wc">
+        <div class="wc-g">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <h3>Architecture That Scales</h3>
+        <p>Every system I design is built to grow — data models, API contracts, frontend composition.</p>
+      </div>
+
+      <div class="wc">
+        <div class="wc-g">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3>Clean Code, Always</h3>
+        <p>Readable, maintainable, well-commented code. Future developers deserve clarity, not archaeology.</p>
+      </div>
+
+      <div class="wc">
+        <div class="wc-g">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        </div>
+        <h3>Business-Oriented</h3>
+        <p>I optimise for impact: faster time-to-market, reduced costs, better user retention.</p>
+      </div>
+
+      <div class="wc">
+        <div class="wc-g">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <h3>Modern Tech Expertise</h3>
+        <p>I work with the modern React + Node.js ecosystem and apply patterns teams can build on.</p>
+      </div>
+
+      <div class="wc">
+        <div class="wc-g">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <h3>Clear Communication</h3>
+        <p>Good docs, clear tradeoffs, stakeholders in the loop — without the jargon wall.</p>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- ═══════════ CONTACT ═══════════ -->
+<!-- ═══ PROJECTS ═══ -->
+<section id="projects" class="section">
+  <div class="container">
+    <div class="sec-header" data-reveal="up">
+      <div class="sec-label" style="justify-content:center">Selected Work</div>
+      <h2 class="sec-title center">Products I've <span class="grd">shipped.</span></h2>
+      <p class="sec-sub">Real-world applications built with care and shipped at scale.</p>
+    </div>
+    <div class="proj-grid" data-reveal="up" style="--d:.1s">
+
+      <!-- Project 1 -->
+      <div class="pj">
+        <div class="pj-thumb" style="background:#060d1a">
+          <svg class="project-art" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="180" fill="#060d1a"/>
+            <rect x="20" y="20" width="280" height="140" rx="8" fill="#0a1628" stroke="rgba(0,200,255,0.15)" stroke-width="1"/>
+            <!-- Dashboard mockup -->
+            <rect x="30" y="30" width="60" height="120" rx="4" fill="#0d1a2e" stroke="rgba(0,200,255,0.1)" stroke-width="1"/>
+            <rect x="34" y="36" width="52" height="8" rx="2" fill="rgba(0,200,255,0.4)"/>
+            <rect x="34" y="50" width="52" height="4" rx="1" fill="rgba(255,255,255,0.07)"/>
+            <rect x="34" y="58" width="52" height="4" rx="1" fill="rgba(255,255,255,0.07)"/>
+            <rect x="34" y="66" width="52" height="4" rx="1" fill="rgba(0,200,255,0.2)"/>
+            <rect x="34" y="74" width="52" height="4" rx="1" fill="rgba(255,255,255,0.07)"/>
+            <!-- Main content -->
+            <rect x="100" y="30" width="190" height="52" rx="4" fill="#0d1a2e" stroke="rgba(0,200,255,0.1)" stroke-width="1"/>
+            <rect x="108" y="38" width="80" height="6" rx="2" fill="rgba(255,255,255,0.5)"/>
+            <rect x="108" y="50" width="120" height="3" rx="1" fill="rgba(255,255,255,0.1)"/>
+            <rect x="108" y="57" width="90" height="3" rx="1" fill="rgba(255,255,255,0.1)"/>
+            <rect x="250" y="36" width="32" height="14" rx="3" fill="rgba(0,200,255,0.3)"/>
+            <!-- Chart bars -->
+            <rect x="100" y="90" width="190" height="60" rx="4" fill="#0d1a2e" stroke="rgba(0,200,255,0.1)" stroke-width="1"/>
+            <rect x="110" y="120" width="14" height="22" rx="2" fill="rgba(0,200,255,0.6)"/>
+            <rect x="130" y="110" width="14" height="32" rx="2" fill="rgba(0,200,255,0.8)"/>
+            <rect x="150" y="105" width="14" height="37" rx="2" fill="rgba(0,200,255,1)"/>
+            <rect x="170" y="115" width="14" height="27" rx="2" fill="rgba(0,200,255,0.5)"/>
+            <rect x="190" y="98" width="14" height="44" rx="2" fill="rgba(124,58,237,0.8)"/>
+            <rect x="210" y="108" width="14" height="34" rx="2" fill="rgba(0,200,255,0.7)"/>
+            <rect x="230" y="102" width="14" height="40" rx="2" fill="rgba(0,200,255,0.9)"/>
+            <rect x="250" y="112" width="14" height="30" rx="2" fill="rgba(124,58,237,0.5)"/>
+          </svg>
+        </div>
+        <div class="pj-body">
+          <div class="pj-tags"><span>SaaS</span><span>Node.js</span><span>React</span></div>
+          <h3>SaaS Admin Dashboard</h3>
+          <p>Multi-tenant analytics platform with real-time charts, user management, and billing integration.</p>
+          <div class="pj-links">
+            <a href="#">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Live Demo
+            </a>
+            <a href="#">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="pj">
+        <div class="pj-thumb" style="background:#06100a">
+          <svg class="project-art" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="180" fill="#06100a"/>
+            <!-- API visualization -->
+            <rect x="20" y="60" width="70" height="60" rx="8" fill="#0a1f12" stroke="rgba(34,197,94,0.3)" stroke-width="1"/>
+            <text x="55" y="88" font-family="Space Mono" font-size="8" fill="rgba(34,197,94,0.8)" text-anchor="middle">CLIENT</text>
+            <text x="55" y="100" font-family="Space Mono" font-size="7" fill="rgba(34,197,94,0.5)" text-anchor="middle">React App</text>
+            <!-- Arrow -->
+            <path d="M90 90 L115 90" stroke="rgba(34,197,94,0.5)" stroke-width="1.5" marker-end="url(#arr2)"/>
+            <defs><marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M2 1L8 5L2 9" fill="none" stroke="rgba(34,197,94,0.8)" stroke-width="1.5"/></marker></defs>
+            <text x="102" y="86" font-family="Space Mono" font-size="6" fill="rgba(34,197,94,0.6)" text-anchor="middle">POST</text>
+            <!-- API box -->
+            <rect x="115" y="50" width="90" height="80" rx="8" fill="#0a1f12" stroke="rgba(34,197,94,0.4)" stroke-width="1.5"/>
+            <text x="160" y="78" font-family="Space Mono" font-size="8" fill="rgba(34,197,94,0.9)" text-anchor="middle">API</text>
+            <text x="160" y="90" font-family="Space Mono" font-size="7" fill="rgba(34,197,94,0.6)" text-anchor="middle">Express.js</text>
+            <rect x="123" y="98" width="74" height="2" rx="1" fill="rgba(34,197,94,0.2)"/>
+            <text x="160" y="112" font-family="Space Mono" font-size="6" fill="rgba(34,197,94,0.4)" text-anchor="middle">JWT · Rate Limit</text>
+            <!-- Arrow right -->
+            <path d="M205 90 L230 90" stroke="rgba(34,197,94,0.5)" stroke-width="1.5" marker-end="url(#arr2)"/>
+            <!-- DB box -->
+            <rect x="230" y="60" width="70" height="60" rx="8" fill="#0a1f12" stroke="rgba(34,197,94,0.3)" stroke-width="1"/>
+            <text x="265" y="88" font-family="Space Mono" font-size="8" fill="rgba(34,197,94,0.8)" text-anchor="middle">DB</text>
+            <text x="265" y="100" font-family="Space Mono" font-size="7" fill="rgba(34,197,94,0.5)" text-anchor="middle">PostgreSQL</text>
+            <!-- Top label -->
+            <text x="160" y="30" font-family="Space Mono" font-size="9" fill="rgba(34,197,94,0.7)" text-anchor="middle">REST API Architecture</text>
+            <rect x="60" y="140" width="200" height="1" fill="rgba(34,197,94,0.1)"/>
+          </svg>
+        </div>
+        <div class="pj-body">
+          <div class="pj-tags"><span>API</span><span>Express</span><span>PostgreSQL</span></div>
+          <h3>REST API Platform</h3>
+          <p>Production-grade API with JWT auth, rate limiting, comprehensive docs, and 99.9% uptime.</p>
+          <div class="pj-links">
+            <a href="#">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Live Demo
+            </a>
+            <a href="#">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="pj">
+        <div class="pj-thumb" style="background:#0a0614">
+          <svg class="project-art" viewBox="0 0 320 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="320" height="180" fill="#0a0614"/>
+            <!-- Mobile app frame -->
+            <rect x="100" y="15" width="120" height="150" rx="16" fill="#12092a" stroke="rgba(124,58,237,0.4)" stroke-width="1.5"/>
+            <rect x="130" y="20" width="60" height="4" rx="2" fill="rgba(124,58,237,0.3)"/>
+            <!-- Screen content -->
+            <rect x="108" y="32" width="104" height="120" rx="8" fill="#08041a"/>
+            <!-- Header -->
+            <rect x="114" y="38" width="60" height="5" rx="2" fill="rgba(255,255,255,0.5)"/>
+            <rect x="194" y="37" width="12" height="7" rx="3" fill="rgba(124,58,237,0.7)"/>
+            <!-- Cards -->
+            <rect x="114" y="52" width="92" height="26" rx="5" fill="rgba(124,58,237,0.15)" stroke="rgba(124,58,237,0.25)" stroke-width="1"/>
+            <rect x="120" y="58" width="40" height="4" rx="1" fill="rgba(255,255,255,0.4)"/>
+            <rect x="120" y="65" width="25" height="3" rx="1" fill="rgba(124,58,237,0.6)"/>
+            <rect x="176" y="57" width="22" height="12" rx="3" fill="rgba(124,58,237,0.4)"/>
+
+            <rect x="114" y="83" width="92" height="26" rx="5" fill="rgba(124,58,237,0.1)" stroke="rgba(124,58,237,0.2)" stroke-width="1"/>
+            <rect x="120" y="89" width="50" height="4" rx="1" fill="rgba(255,255,255,0.3)"/>
+            <rect x="120" y="96" width="30" height="3" rx="1" fill="rgba(124,58,237,0.5)"/>
+
+            <rect x="114" y="114" width="92" height="26" rx="5" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+            <rect x="120" y="120" width="45" height="4" rx="1" fill="rgba(255,255,255,0.3)"/>
+            <rect x="120" y="127" width="20" height="3" rx="1" fill="rgba(0,200,255,0.6)"/>
+            <rect x="176" y="119" width="22" height="12" rx="3" fill="rgba(0,200,255,0.3)"/>
+
+            <!-- Bottom nav -->
+            <rect x="108" y="140" width="104" height="12" rx="0" fill="rgba(124,58,237,0.1)"/>
+            <circle cx="130" cy="146" r="4" fill="rgba(124,58,237,0.6)"/>
+            <circle cx="160" cy="146" r="4" fill="rgba(255,255,255,0.1)"/>
+            <circle cx="190" cy="146" r="4" fill="rgba(255,255,255,0.1)"/>
+
+            <!-- Floating elements outside phone -->
+            <circle cx="50" cy="70" r="20" fill="rgba(124,58,237,0.08)" stroke="rgba(124,58,237,0.2)" stroke-width="1"/>
+            <text x="50" y="74" font-family="Space Mono" font-size="8" fill="rgba(124,58,237,0.7)" text-anchor="middle">UX</text>
+
+            <circle cx="270" cy="100" r="18" fill="rgba(0,200,255,0.06)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+            <text x="270" y="104" font-family="Space Mono" font-size="7" fill="rgba(0,200,255,0.7)" text-anchor="middle">iOS</text>
+          </svg>
+        </div>
+        <div class="pj-body">
+          <div class="pj-tags"><span>React Native</span><span>Mobile</span><span>UI/UX</span></div>
+          <h3>Mobile CRM App</h3>
+          <p>Cross-platform mobile application with offline support, push notifications, and smooth UX.</p>
+          <div class="pj-links">
+            <a href="#">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Live Demo
+            </a>
+            <a href="#">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CONTACT ═══ -->
 <section id="contact" class="section s-dark">
   <div class="container">
     <div class="contact-wrap">
 
       <div class="ci" data-reveal="left">
-        <div class="sec-label" style="text-align: left;">Get In Touch</div>
+        <div class="sec-label">Get In Touch</div>
         <h2 class="sec-title">Let's build<br/>something<br/><span class="grd">great.</span></h2>
         <p class="body-p">Whether you have a product idea, need engineering help, or a codebase that needs work — I'm interested in conversations that lead somewhere real.</p>
         <div class="c-links">
-       
-         
-          <a href="https://www.linkedin.com/in/yasir-rasheed-dev" target="_blank" rel="noopener noreferrer" class="cl"><span class="cli"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></span><span>LinkedIn Profile</span><span class="cl-a">↗</span></a>
-          <div class="cl cl-loc"><span class="cli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></span><span>Lahore, Pakistan</span></div>
+          <a href="https://www.linkedin.com/in/yasir-rasheed-dev" target="_blank" rel="noopener noreferrer" class="cl">
+            <span class="cli"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></span>
+            <span>LinkedIn Profile</span>
+            <span class="cl-a">↗</span>
+          </a>
+          <div class="cl cl-loc">
+            <span class="cli"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
+            <span>Lahore, Pakistan</span>
+          </div>
         </div>
       </div>
 
       <div class="cf-wrap" data-reveal="right">
-        <form id="contactForm" novalidate aria-label="Contact form">
+        <form id="contactForm" novalidate>
           <div class="cf-row">
             <div class="cf-g">
-              <input type="text"  id="cf-name"    name="name"    placeholder=" " required autocomplete="name"/>
+              <input type="text" id="cf-name" name="name" placeholder=" " required/>
               <label for="cf-name">Your Name</label>
-              <span class="ce" id="err-name"    role="alert"></span>
+              <span class="ce" id="err-name"></span>
             </div>
             <div class="cf-g">
-              <input type="email" id="cf-email"   name="email"   placeholder=" " required autocomplete="email"/>
+              <input type="email" id="cf-email" name="email" placeholder=" " required/>
               <label for="cf-email">Email Address</label>
-              <span class="ce" id="err-email"   role="alert"></span>
+              <span class="ce" id="err-email"></span>
             </div>
           </div>
           <div class="cf-g">
             <input type="text" id="cf-subject" name="subject" placeholder=" " required/>
             <label for="cf-subject">Subject</label>
-            <span class="ce" id="err-subject" role="alert"></span>
+            <span class="ce" id="err-subject"></span>
           </div>
           <div class="cf-g">
             <textarea id="cf-message" name="message" rows="5" placeholder=" " required></textarea>
             <label for="cf-message">Your Message</label>
-            <span class="ce" id="err-message" role="alert"></span>
+            <span class="ce" id="err-message"></span>
           </div>
           <button type="submit" class="btn-primary full" id="submitBtn">
             <span id="btnTxt">
               Send Message
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
             </span>
             <span id="btnLoad" style="display:none">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
               Sending...
             </span>
             <div class="bp-glow"></div>
           </button>
-          <div class="cf-ok" id="formSuccess" role="status" aria-live="polite">
+          <div class="cf-ok" id="formSuccess">
             <span>✓</span>
             <div><strong>Message received!</strong><small>I'll reply within 24–48 hours.</small></div>
           </div>
@@ -385,7 +1567,7 @@
         <div class="lm"><span>YR</span></div>
         <div><strong>Yasir Rasheed</strong><span>Full Stack Developer & Product Builder</span></div>
       </div>
-      <nav class="ft-nav" aria-label="Footer navigation">
+      <nav class="ft-nav">
         <a href="#about">About</a>
         <a href="#skills">Skills</a>
         <a href="#services">Services</a>
@@ -393,30 +1575,290 @@
         <a href="#contact">Contact</a>
       </nav>
       <div class="ft-soc">
-        <a href="https://www.linkedin.com/in/yasir-rasheed-dev" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="sb-btn">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        <a href="https://www.linkedin.com/in/yasir-rasheed-dev" target="_blank" rel="noopener noreferrer" class="sb-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
         </a>
-        <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="sb-btn sb-wa">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer" class="sb-btn sb-wa">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         </a>
-        <a href="mailto:yasir@example.com" aria-label="Email" class="sb-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+        <a href="mailto:yasir@example.com" class="sb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
         </a>
-        <a href="#" aria-label="GitHub" class="sb-btn">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        <a href="#" class="sb-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
         </a>
       </div>
     </div>
     <div class="ft-bottom">
       <p>© <span id="year"></span> Yasir Rasheed. All rights reserved.</p>
-      <button id="backToTop" aria-label="Back to top">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg>
+      <button id="backToTop">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
         Back to top
       </button>
     </div>
   </div>
 </footer>
 
-<script src="script.js"></script>
+<script>
+// ── THREE.JS HERO ANIMATION ──
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  if(!canvas || typeof THREE === 'undefined') return;
+
+  const scene    = new THREE.Scene();
+  const W = canvas.parentElement.offsetWidth;
+  const H = canvas.parentElement.offsetHeight || window.innerHeight;
+  const camera   = new THREE.PerspectiveCamera(60, W/H, 0.1, 200);
+  camera.position.set(0, 0, 28);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  // Materials
+  const mats = [
+    new THREE.MeshBasicMaterial({ color: 0x00c8ff, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x7c3aed, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x4f46e5, wireframe: true }),
+    new THREE.MeshBasicMaterial({ color: 0x0ea5e9, wireframe: true }),
+  ];
+
+  const geos = [
+    new THREE.BoxGeometry(1,1,1),
+    new THREE.TetrahedronGeometry(0.8),
+    new THREE.OctahedronGeometry(0.7),
+    new THREE.IcosahedronGeometry(0.7),
+    new THREE.TorusGeometry(0.6, 0.2, 8, 16),
+    new THREE.BoxGeometry(1.2,0.4,0.4),
+  ];
+
+  const meshes = [];
+  const COUNT = 60;
+
+  for(let i=0; i<COUNT; i++){
+    const g  = geos[Math.floor(Math.random()*geos.length)];
+    const m  = mats[Math.floor(Math.random()*mats.length)];
+    const mesh = new THREE.Mesh(g, m);
+
+    // Random position in a wide field
+    mesh.position.set(
+      (Math.random()-0.5)*60,
+      (Math.random()-0.5)*36,
+      (Math.random()-0.5)*40 - 5
+    );
+
+    const s = 0.3 + Math.random()*1.4;
+    mesh.scale.setScalar(s);
+
+    // Store velocity + rotation speed
+    mesh.userData = {
+      vx: (Math.random()-0.5)*0.006,
+      vy: (Math.random()-0.5)*0.006,
+      vz: (Math.random()-0.5)*0.004,
+      rx: (Math.random()-0.5)*0.012,
+      ry: (Math.random()-0.5)*0.012,
+      rz: (Math.random()-0.5)*0.008,
+    };
+
+    scene.add(mesh);
+    meshes.push(mesh);
+  }
+
+  // Mouse parallax
+  let mx = 0, my = 0;
+  document.addEventListener('mousemove', e=>{
+    mx = (e.clientX / window.innerWidth  - 0.5) * 0.8;
+    my = (e.clientY / window.innerHeight - 0.5) * 0.5;
+  });
+
+  // Resize
+  window.addEventListener('resize', ()=>{
+    const W2 = canvas.parentElement.offsetWidth;
+    const H2 = canvas.parentElement.offsetHeight || window.innerHeight;
+    camera.aspect = W2/H2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W2, H2);
+  });
+
+  let frame = 0;
+  function animate(){
+    requestAnimationFrame(animate);
+    frame++;
+
+    // Smooth camera parallax
+    camera.position.x += (mx*3 - camera.position.x)*0.04;
+    camera.position.y += (-my*2 - camera.position.y)*0.04;
+
+    meshes.forEach(m=>{
+      const d = m.userData;
+      m.position.x += d.vx;
+      m.position.y += d.vy;
+      m.position.z += d.vz;
+      m.rotation.x += d.rx;
+      m.rotation.y += d.ry;
+      m.rotation.z += d.rz;
+
+      // Wrap around bounds
+      if(m.position.x >  32) m.position.x = -32;
+      if(m.position.x < -32) m.position.x =  32;
+      if(m.position.y >  20) m.position.y = -20;
+      if(m.position.y < -20) m.position.y =  20;
+      if(m.position.z >  10) m.position.z = -30;
+      if(m.position.z < -30) m.position.z =  10;
+    });
+
+    renderer.render(scene, camera);
+  }
+  animate();
+})();
+
+// ── LOADER ──
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('done');
+  }, 1200);
+});
+
+// ── TYPED TEXT ──
+const phrases = [
+  'npm run build:production',
+  'git push origin main',
+  'node server.js --port 3000',
+  'SELECT * FROM projects WHERE shipped = true',
+];
+let pi=0, ci=0, del=false;
+function typeLoop(){
+  const el = document.getElementById('typed-text');
+  if(!el) return;
+  const phrase = phrases[pi];
+  if(!del){
+    el.textContent = phrase.slice(0,++ci);
+    if(ci===phrase.length){ del=true; setTimeout(typeLoop,2000); return; }
+    setTimeout(typeLoop, 60);
+  } else {
+    el.textContent = phrase.slice(0,--ci);
+    if(ci===0){ del=false; pi=(pi+1)%phrases.length; setTimeout(typeLoop,500); return; }
+    setTimeout(typeLoop, 30);
+  }
+}
+setTimeout(typeLoop, 1600);
+
+// ── HERO WORDS ANIMATION ──
+const words = document.querySelectorAll('.word, .amp');
+words.forEach((w,i)=>{
+  w.style.animation = `fadeUp .6s ${.3 + i*.1}s forwards`;
+});
+
+// ── COUNTER ANIMATION ──
+function animateCounters(){
+  document.querySelectorAll('.hs-n').forEach(el=>{
+    const target = parseInt(el.dataset.t);
+    let cur=0;
+    const step = target/40;
+    const iv = setInterval(()=>{
+      cur = Math.min(cur+step, target);
+      el.textContent = Math.floor(cur);
+      if(cur>=target) clearInterval(iv);
+    },30);
+  });
+}
+
+// ── SCROLL REVEAL ──
+const revealObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      if(e.target.closest('#hero') || e.target.id==='heroStats') animateCounters();
+    }
+  });
+},{threshold:.15});
+document.querySelectorAll('[data-reveal]').forEach(el=>revealObs.observe(el));
+
+// Also run counters when stats scroll into view
+const statsObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ animateCounters(); statsObs.unobserve(e.target); } });
+},{threshold:.5});
+const stats = document.getElementById('heroStats');
+if(stats) statsObs.observe(stats);
+
+// ── SKILL BARS ──
+const barObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.querySelectorAll('.sb-fill').forEach(bar=>{
+        bar.style.width = bar.dataset.w + '%';
+      });
+    }
+  });
+},{threshold:.3});
+document.querySelectorAll('.sbars').forEach(s=>barObs.observe(s));
+
+// ── NAVBAR SCROLL ──
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY>20);
+});
+
+// ── HAMBURGER ──
+const hb  = document.getElementById('hamburger');
+const mob = document.getElementById('mobileMenu');
+if(hb){
+  hb.addEventListener('click',()=>{
+    const open = mob.classList.toggle('open');
+    hb.setAttribute('aria-expanded', open);
+    mob.setAttribute('aria-hidden', !open);
+  });
+  mob.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{
+    mob.classList.remove('open');
+    hb.setAttribute('aria-expanded','false');
+  }));
+}
+
+// ── CURSOR ──
+const dot  = document.getElementById('c-dot');
+const ring = document.getElementById('c-ring');
+let rx=0, ry=0;
+document.addEventListener('mousemove',e=>{
+  dot.style.left  = e.clientX+'px';
+  dot.style.top   = e.clientY+'px';
+  rx += (e.clientX - rx) * 0.12;
+  ry += (e.clientY - ry) * 0.12;
+  ring.style.left = rx+'px';
+  ring.style.top  = ry+'px';
+});
+function smoothCursor(){ rx+=(parseFloat(dot.style.left||0)-rx)*.12; ry+=(parseFloat(dot.style.top||0)-ry)*.12; ring.style.left=rx+'px'; ring.style.top=ry+'px'; requestAnimationFrame(smoothCursor); }
+smoothCursor();
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ ring.style.width='48px'; ring.style.height='48px'; });
+  el.addEventListener('mouseleave',()=>{ ring.style.width='32px'; ring.style.height='32px'; });
+});
+
+// ── CONTACT FORM ──
+document.getElementById('contactForm')?.addEventListener('submit',function(e){
+  e.preventDefault();
+  let ok=true;
+  [['cf-name','err-name'],['cf-email','err-email'],['cf-subject','err-subject'],['cf-message','err-message']].forEach(([id,eid])=>{
+    const el=document.getElementById(id), er=document.getElementById(eid);
+    if(!el.value.trim()){ er.textContent='This field is required.'; ok=false; }
+    else{ er.textContent=''; }
+  });
+  if(!ok) return;
+  document.getElementById('btnTxt').style.display='none';
+  document.getElementById('btnLoad').style.display='flex';
+  setTimeout(()=>{
+    document.getElementById('btnTxt').style.display='flex';
+    document.getElementById('btnLoad').style.display='none';
+    document.getElementById('formSuccess').style.display='flex';
+    this.reset();
+  },1800);
+});
+
+// ── BACK TO TOP ──
+document.getElementById('backToTop')?.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+// ── YEAR ──
+document.getElementById('year').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
