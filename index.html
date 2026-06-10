@@ -864,7 +864,162 @@
       .hero-stats .hs { padding: 0 16px; }
       .hero-stats .hs-n { font-size: 30px; }
     }
-   
+    /* ── HERO RESPONSIVE FIX ── */
+@media (max-width: 1100px) {
+  .hero-layout {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+
+  .hero-copy {
+    max-width: 760px;
+  }
+
+  .hero-visual {
+    min-height: auto;
+    max-width: 560px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .ai-card {
+    width: min(100%, 520px);
+  }
+
+  .hv-orbit-1 {
+    width: 500px;
+    height: 500px;
+  }
+
+  .hv-orbit-2 {
+    width: 390px;
+    height: 390px;
+  }
+}
+
+@media (max-width: 768px) {
+  #hero {
+    min-height: auto;
+  }
+
+  .hero-content {
+    padding: 110px 0 70px;
+  }
+
+  .hero-layout {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .hero-copy {
+    text-align: left;
+  }
+
+  .hero-name {
+    font-size: clamp(36px, 11vw, 48px);
+    line-height: 1.05;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    max-width: 100%;
+  }
+
+  .hero-terminal {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 11px;
+    padding: 10px 14px;
+  }
+
+  #typed-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hero-btns {
+    gap: 12px;
+    margin-bottom: 36px;
+  }
+
+  .btn-primary,
+  .btn-glass {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .hero-stats {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hs {
+    padding: 0;
+    min-width: 92px;
+  }
+
+  .hs-sep {
+    display: none;
+  }
+
+  .hero-visual {
+    max-width: 420px;
+    transform: scale(.94);
+    transform-origin: top center;
+  }
+
+  .float-card {
+    min-width: 128px;
+    padding: 10px 12px;
+  }
+
+  .fc-1 {
+    left: 0;
+    top: 42px;
+  }
+
+  .fc-2 {
+    right: 0;
+    top: 150px;
+  }
+
+  .fc-3 {
+    left: 12px;
+    bottom: 50px;
+  }
+}
+
+@media (max-width: 520px) {
+  .container {
+    padding: 0 20px;
+  }
+
+  .hero-visual {
+    display: none;
+  }
+
+  .hero-badge {
+    font-size: 10px;
+    padding: 7px 13px;
+    margin-bottom: 24px;
+  }
+
+  .hero-name {
+    font-size: 38px;
+  }
+
+  .hero-terminal {
+    display: none;
+  }
+
+  .scroll-mouse {
+    display: none;
+  }
+}
+   .tf {
+  display: none !important;
+}
   </style>
 </head>
 <body>
