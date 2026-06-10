@@ -10,6 +10,101 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Space+Mono:wght@400;700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
+    .hero-visual {
+  position: relative;
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  animation: fadeUp .8s 1s forwards;
+}
+
+.ai-card {
+  position: relative;
+  width: min(100%, 500px);
+  border-radius: 26px;
+  padding: 14px;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    linear-gradient(135deg, rgba(0,200,255,.55), rgba(124,58,237,.55)) border-box;
+  border: 1px solid transparent;
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.45),
+    0 0 80px rgba(0,200,255,.08);
+  overflow: hidden;
+}
+
+.ai-card::before {
+  content: '';
+  position: absolute;
+  inset: -120px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,200,255,.18), transparent 28%),
+    radial-gradient(circle at 80% 15%, rgba(124,58,237,.18), transparent 26%),
+    radial-gradient(circle at 55% 85%, rgba(0,229,255,.12), transparent 30%);
+  animation: aiGlowMove 10s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes aiGlowMove {
+  0%,100% { transform: translate(0,0) rotate(0deg); }
+  50% { transform: translate(20px,-16px) rotate(8deg); }
+}
+
+.ai-card-top {
+  position: relative;
+  z-index: 2;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 6px 12px;
+}
+
+.ai-card-top span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.16);
+}
+
+.ai-card-top span:nth-child(1) { background: #ff5f57; }
+.ai-card-top span:nth-child(2) { background: #ffbd2e; }
+.ai-card-top span:nth-child(3) { background: #28c840; }
+
+.ai-hero-svg {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 20px;
+}
+
+.hv-orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(0,200,255,.14);
+  pointer-events: none;
+}
+
+.hv-orbit-1 {
+  width: 520px;
+  height: 520px;
+  animation: orbitSpin 22s linear infinite;
+}
+
+.hv-orbit-2 {
+  width: 410px;
+  height: 410px;
+  border-color: rgba(124,58,237,.16);
+  animation: orbitSpin 18s linear infinite reverse;
+}
+
+@keyframes orbitSpin {
+  to { transform: rotate(360deg); }
+}
     .hero-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(420px, .95fr);
