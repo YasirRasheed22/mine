@@ -1,26 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://iamyasirrasheed.vercel.app/</loc>
-    <lastmod>2026-06-10</lastmod>
-    <priority>1.0</priority>
-  </url>
-
-  <url>
-    <loc>https://iamyasirrasheed.vercel.app/projects/my-aio-dialer.html</loc>
-    <lastmod>2026-06-10</lastmod>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://iamyasirrasheed.vercel.app/projects/hotel-management-system.html</loc>
-    <lastmod>2026-06-10</lastmod>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://iamyasirrasheed.vercel.app/projects/hr-payroll-attendance-frontpin.html</loc>
-    <lastmod>2026-06-10</lastmod>
-    <priority>0.8</priority>
-  </url>
+  <url><loc>https://iamyasirrasheed.vercel.app/</loc><lastmod>2026-06-10</lastmod><priority>1.0</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/my-aio-dialer.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/hotel-management-system.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/hostel-management-system.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/hr-payroll-attendance-frontpin.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/mood-detector-mobile-app.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/r-wires-job-posting-portal.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/csc-service-application.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
+  <url><loc>https://iamyasirrasheed.vercel.app/projects/front-force-crm.html</loc><lastmod>2026-06-10</lastmod><priority>0.8</priority></url>
 </urlset>
