@@ -64,7 +64,7 @@
     .add(() => heroIn(), '-=.45');
 
   /* ── 3. Hero ── */
-  const solarState = { intro: 0 };
+  const solarState = { intro: .55 };
   function heroIn() {
     const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
     tl.fromTo('.hero-badge', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: .8 })
@@ -77,8 +77,7 @@
       .fromTo('.hero-stats',    { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: .8 }, '-=.6')
       .fromTo('.scroll-mouse',  { opacity: 0 }, { opacity: 1, duration: .8 }, '-=.3')
       // planets fly out of the sun into their orbits
-      .fromTo('.solar', { opacity: 0 }, { opacity: 1, duration: .8, ease: 'power2.out' }, 0.2)
-      .to(solarState, { intro: 1, duration: 2.6, ease: 'expo.out' }, 0.2);
+      .to(solarState, { intro: 1, duration: 2.2, ease: 'expo.out' }, 0);
   }
 
   initSolar();
@@ -114,10 +113,10 @@
       return p;
     });
     const orbits = $$('.orbit', stage);
-    const view = { tilt: 62, rz: -18, tTilt: 62, tRz: -18 };
+    const view = { tilt: 54, rz: -18, tTilt: 54, tRz: -18 };
     addEventListener('mousemove', e => {
       view.tRz = -18 + (e.clientX / innerWidth - .5) * 26;
-      view.tTilt = 62 - (e.clientY / innerHeight - .5) * 16;
+      view.tTilt = 54 - (e.clientY / innerHeight - .5) * 14;
     });
     let visible = true;
     new IntersectionObserver(es => visible = es[0].isIntersecting).observe($('#solar'));

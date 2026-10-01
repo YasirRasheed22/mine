@@ -276,3 +276,53 @@ html.lenis, html.lenis body { height: auto; }
 .faq-item[open] summary::after { transform: translateY(-50%) rotate(45deg); }
 .faq-item p { padding: 0 24px 22px; color: var(--muted); font-size: 15.5px; line-height: 1.8; }
 .ft-loc { text-align: center; color: var(--muted); font-size: 12.5px; padding: 0 20px 26px; }
+
+/* ═══ HERO FIXES: no empty space, nothing under the navbar, no sideways overflow ═══ */
+main, footer { overflow-x: clip; }
+.js-motion .hero-visual { opacity: 1; animation: none; }
+.hero-visual { min-height: 520px; }
+.solar { margin-top: -30px; }
+
+@media (min-width: 1101px) {
+  .hero-name { font-size: clamp(28px, 2.5vw, 38px); }
+  .hn-line { white-space: nowrap; }
+}
+@media (max-width: 1100px) {
+  .hero-visual { height: 460px; min-height: 0; max-width: 100%; margin: 0 auto; }
+  .solar { margin: 0; transform: scale(.78); }
+}
+@media (max-width: 768px) {
+  .hero-content { padding-top: 112px !important; padding-bottom: 60px !important; }
+  .hero-visual { height: 390px; transform: none !important; }
+  .solar { transform: scale(.62); }
+}
+@media (max-width: 520px) {
+  .hero-content { padding-top: 104px !important; }
+  .hero-badge { margin-bottom: 20px; }
+  .hero-visual { display: flex !important; height: 320px; }
+  .solar { transform: scale(.5); }
+}
+@media (max-width: 1100px) {
+  .hero-layout { grid-template-columns: minmax(0, 1fr); }
+  .hero-copy, .hero-visual { min-width: 0; }
+}
+/* sun: drop the blurred conic layer (it rendered as a square inside the 3D stage) */
+.sun-core::before { display: none; }
+.sun-core { box-shadow: 0 0 50px rgba(0,200,255,.75), 0 0 110px rgba(124,58,237,.5), 0 0 200px rgba(0,200,255,.18), inset -10px -12px 30px rgba(0,0,0,.35); }
+
+/* ── CONTACT: both columns share one height, form fills its card ── */
+.contact-wrap { align-items: stretch; }
+.contact-wrap .ci { display: flex; flex-direction: column; }
+.contact-wrap .c-links { margin-top: auto; padding-top: 28px; }
+.contact-wrap .cf-wrap { display: flex; flex-direction: column; padding: 44px; }
+.contact-wrap #contactForm { display: flex; flex-direction: column; flex: 1; gap: 8px; }
+.contact-wrap #contactForm .cf-g { margin-bottom: 12px; }
+.contact-wrap #contactForm .cf-g input { padding: 20px 16px; }
+.contact-wrap #contactForm .cf-g:has(textarea) { flex: 1; display: flex; }
+.contact-wrap #contactForm textarea { flex: 1; height: 100%; min-height: 150px; resize: none; padding-top: 20px; }
+.contact-wrap #contactForm .btn-primary { margin-top: auto; padding-top: 18px; padding-bottom: 18px; }
+@media (max-width: 768px) {
+  .contact-wrap .c-links { margin-top: 28px; }
+  .contact-wrap .cf-wrap { padding: 28px 22px; }
+  .contact-wrap #contactForm textarea { min-height: 170px; }
+}
