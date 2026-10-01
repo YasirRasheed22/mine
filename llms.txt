@@ -1,0 +1,40 @@
+# Yasir Rasheed
+
+> Yasir Rasheed is a full stack and product developer based in Johar Town, Lahore, Punjab, Pakistan. He has 6+ years of experience building web, mobile and backend products with React.js, React Native and Node.js, and works as a Software Engineer at UniSoftwares.
+
+Website: https://iamyasirrasheed.vercel.app/
+Location: Johar Town, Lahore, Punjab, Pakistan
+Email: yasirrasheed832@gmail.com
+Phone / WhatsApp: +92 309 4346697
+LinkedIn: https://www.linkedin.com/in/yasir-rasheed-dev
+
+## What he does
+- Full stack web development: admin portals, dashboards and SaaS products (React.js, Node.js, MySQL, PostgreSQL)
+- Product development: turning business requirements into working software, from first idea to launch
+- Mobile apps: cross-platform React Native apps with Firebase, push notifications and live tracking
+- Backend and REST APIs: Node.js and PHP (CodeIgniter), with OWASP-aware security practices
+- AI agents and chatbots: OpenAI, OpenCV and TensorFlow, including AI call transcription
+- Payments and communication: Stripe, PayPal, Authorize.Net, Twilio voice and SMS, WebRTC
+
+## Experience
+- Software Engineer, UniSoftwares (Jun 2023 - Present)
+- Backend Product Developer, Saabeqoon Inc. (Nov 2020 - Apr 2023)
+- Software Engineering Intern, promoted to Junior Software Engineer, United Computer Solutions (Mar 2019 - Aug 2020)
+
+## Education
+- BS Software Engineering, Riphah International University, 2019
+
+## Selected projects
+- AI Predictive Dialer Platform (web, mobile, desktop, Chrome extension): https://iamyasirrasheed.vercel.app/projects/my-aio-dialer.html
+- TowRankers, towing and roadside assistance operations platform
+- HandyOps, field service and workforce management platform
+- Hotel / Hostel Management System: https://iamyasirrasheed.vercel.app/projects/hotel-management-system.html and https://iamyasirrasheed.vercel.app/projects/hostel-management-system.html
+- GoRides, cab booking Android app
+- Facebook Leads Management System
+
+## More case studies
+- https://iamyasirrasheed.vercel.app/projects/hr-payroll-attendance-frontpin.html
+- https://iamyasirrasheed.vercel.app/projects/front-force-crm.html
+- https://iamyasirrasheed.vercel.app/projects/r-wires-job-posting-portal.html
+- https://iamyasirrasheed.vercel.app/projects/csc-service-application.html
+- https://iamyasirrasheed.vercel.app/projects/mood-detector-mobile-app.html
